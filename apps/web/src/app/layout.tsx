@@ -5,11 +5,7 @@ type Props = {
 };
 
 // This is the root layout required by Next.js App Router
-// It provides the basic HTML structure
+// The locale-specific layout will handle the HTML structure
 export default function RootLayout({ children }: Props) {
-  return (
-    <html>
-      <body>{children}</body>
-    </html>
-  );
+  return children;
 }
