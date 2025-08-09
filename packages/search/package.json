@@ -1,0 +1,23 @@
+{
+  "name": "@workspace/search",
+  "version": "0.1.0",
+  "description": "Aurora search package with MeiliSearch",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "meilisearch": "^0.37.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.10",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
+  }
+}

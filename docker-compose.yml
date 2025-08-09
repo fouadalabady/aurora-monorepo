@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: aurora-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aurora
+      POSTGRES_USER: aurora
+      POSTGRES_PASSWORD: aurora_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - aurora-network
+
+  # MeiliSearch for search functionality
+  meilisearch:
+    image: getmeili/meilisearch:v1.5
+    container_name: aurora-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: aurora_meili_master_key_dev
+      MEILI_ENV: development
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - aurora-network
+
+  # Plausible Analytics
+  plausible_db:
+    image: postgres:16-alpine
+    container_name: aurora-plausible-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: plausible
+      POSTGRES_USER: plausible
+      POSTGRES_PASSWORD: plausible_dev_password
+    volumes:
+      - plausible_db_data:/var/lib/postgresql/data
+    networks:
+      - aurora-network
+
+  plausible_events_db:
+    image: clickhouse/clickhouse-server:23.3.7.5-alpine
+    container_name: aurora-plausible-events-db
+    restart: unless-stopped
+    volumes:
+      - plausible_events_data:/var/lib/clickhouse
+      - ./docker/plausible/clickhouse-config.xml:/etc/clickhouse-server/config.d/logging.xml:ro
+      - ./docker/plausible/clickhouse-user-config.xml:/etc/clickhouse-server/users.d/logging.xml:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - aurora-network
+
+  plausible:
+    image: plausible/analytics:v2.0
+    container_name: aurora-plausible
+    restart: unless-stopped
+    command: sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
+    depends_on:
+      - plausible_db
+      - plausible_events_db
+    ports:
+      - "8000:8000"
+    environment:
+      BASE_URL: http://localhost:8000
+      SECRET_KEY_BASE: aurora_plausible_secret_key_base_dev_very_long_string_here
+      DATABASE_URL: postgres://plausible:plausible_dev_password@plausible_db:5432/plausible
+      CLICKHOUSE_DATABASE_URL: http://plausible_events_db:8123/plausible_events_db
+      DISABLE_REGISTRATION: true
+    networks:
+      - aurora-network
+
+  # Redis for caching (optional but recommended)
+  redis:
+    image: redis:7-alpine
+    container_name: aurora-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - aurora-network
+
+volumes:
+  postgres_data:
+  meilisearch_data:
+  plausible_db_data:
+  plausible_events_data:
+  redis_data:
+
+networks:
+  aurora-network:
+    driver: bridge

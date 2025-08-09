@@ -1,0 +1,324 @@
+// Aurora Database Schema - Service-Focused Business Model
+// This schema supports HVAC/service businesses with lead generation and conversion optimization
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  password      String?
+  role          UserRole  @default(USER)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts Account[]
+  sessions Session[]
+  posts    Post[]
+  leads    Lead[]    @relation("AssignedTo")
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Service Management
+model Service {
+  id             String        @id @default(cuid())
+  title          String
+  slug           String        @unique
+  description    String?
+  content        String?       @db.Text
+  excerpt        String?
+  image          String?
+  gallery        String[]      @default([])
+  price          Decimal?      @db.Decimal(10, 2)
+  priceType      PriceType     @default(FIXED)
+  category       String
+  tags           String[]      @default([])
+  features       String[]      @default([])
+  status         ContentStatus @default(DRAFT)
+  seoTitle       String?
+  seoDescription String?
+  published      Boolean       @default(false)
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relations
+  leads    Lead[]
+  projects Project[]
+
+  @@map("services")
+}
+
+// Lead Generation & Management
+model Lead {
+  id             String     @id @default(cuid())
+  name           String
+  email          String
+  phone          String?
+  company        String?
+  message        String?    @db.Text
+  source         LeadSource @default(WEBSITE)
+  status         LeadStatus @default(NEW)
+  priority       Priority   @default(MEDIUM)
+  serviceId      String?
+  assignedToId   String?
+  estimatedValue Decimal?   @db.Decimal(10, 2)
+  notes          String?    @db.Text
+  followUpDate   DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  // Relations
+  service    Service?       @relation(fields: [serviceId], references: [id])
+  assignedTo User?          @relation("AssignedTo", fields: [assignedToId], references: [id])
+  activities LeadActivity[]
+
+  @@map("leads")
+}
+
+model LeadActivity {
+  id          String           @id @default(cuid())
+  leadId      String
+  type        LeadActivityType
+  title       String
+  description String?          @db.Text
+  createdAt   DateTime         @default(now())
+
+  // Relations
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@map("lead_activities")
+}
+
+// Customer Trust & Social Proof
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  company   String?
+  position  String?
+  content   String   @db.Text
+  rating    Int      @default(5)
+  image     String?
+  featured  Boolean  @default(false)
+  approved  Boolean  @default(false)
+  serviceId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("testimonials")
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  description String?
+  content     String?       @db.Text
+  images      String[]      @default([])
+  beforeImage String?
+  afterImage  String?
+  serviceId   String?
+  clientName  String?
+  location    String?
+  duration    String?
+  value       Decimal?      @db.Decimal(10, 2)
+  status      ContentStatus @default(DRAFT)
+  featured    Boolean       @default(false)
+  published   Boolean       @default(false)
+  publishedAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  service Service? @relation(fields: [serviceId], references: [id])
+
+  @@map("projects")
+}
+
+// Content Management
+model Post {
+  id             String        @id @default(cuid())
+  title          String
+  slug           String        @unique
+  content        String?       @db.Text
+  excerpt        String?
+  image          String?
+  category       String?
+  tags           String[]      @default([])
+  status         ContentStatus @default(DRAFT)
+  seoTitle       String?
+  seoDescription String?
+  published      Boolean       @default(false)
+  publishedAt    DateTime?
+  authorId       String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relations
+  author User @relation(fields: [authorId], references: [id])
+
+  @@map("posts")
+}
+
+model Page {
+  id             String        @id @default(cuid())
+  title          String
+  slug           String        @unique
+  content        String?       @db.Text
+  template       String?       @default("default")
+  status         ContentStatus @default(DRAFT)
+  seoTitle       String?
+  seoDescription String?
+  published      Boolean       @default(false)
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("pages")
+}
+
+// Team Management
+model TeamMember {
+  id          String   @id @default(cuid())
+  name        String
+  position    String
+  bio         String?  @db.Text
+  image       String?
+  email       String?
+  phone       String?
+  linkedin    String?
+  twitter     String?
+  specialties String[] @default([])
+  featured    Boolean  @default(false)
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("team_members")
+}
+
+// Settings & Configuration
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  type      String   @default("string")
+  category  String   @default("general")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  EDITOR
+  USER
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PriceType {
+  FIXED
+  STARTING_FROM
+  QUOTE_REQUIRED
+  HOURLY
+}
+
+enum LeadSource {
+  WEBSITE
+  PHONE
+  EMAIL
+  REFERRAL
+  SOCIAL_MEDIA
+  GOOGLE_ADS
+  FACEBOOK_ADS
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL_SENT
+  NEGOTIATING
+  WON
+  LOST
+  FOLLOW_UP
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum LeadActivityType {
+  CALL
+  EMAIL
+  MEETING
+  PROPOSAL
+  FOLLOW_UP
+  NOTE
+  STATUS_CHANGE
+}
