@@ -6,6 +6,7 @@ import { Button } from '@workspace/ui';
 import { Globe } from 'lucide-react';
 import { type Locale } from '../i18n';
 
+
 interface LanguageSwitcherProps {
   className?: string;
 }
