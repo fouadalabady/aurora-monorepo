@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "description": "Aurora - Open Source Service-Focused Business Website & CMS",
-
   "packageManager": "pnpm@9.0.0",
   "scripts": {
     "build": "turbo build",
@@ -33,5 +32,11 @@
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.13.0",
+    "@prisma/extension-accelerate": "^2.0.2",
+    "dotenv-cli": "^10.0.0",
+    "prisma": "^5.7.1"
   }
 }

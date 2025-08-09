@@ -9,11 +9,15 @@ export type Locale = (typeof locales)[number];
 export {};
 
 // Export the getRequestConfig function as a named export as well
-export const getI18nConfig = getRequestConfig(async ({ locale }) => {
+export const getI18nConfig = getRequestConfig(async ({ requestLocale }) => {
+  // This is the new API - await the requestLocale
+  const locale = await requestLocale;
+  
   // Validate that the incoming `locale` parameter is valid
   if (!locales.includes(locale as Locale)) notFound();
 
   return {
+    locale,
     messages: (await import(`../messages/${locale}.json`)).default,
     timeZone: 'UTC',
     now: new Date(),
