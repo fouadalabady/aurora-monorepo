@@ -150,9 +150,23 @@ docker-compose up --build
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 📚 Documentation
+
+### Getting Started
+- [Getting Started Guide](./docs/GETTING_STARTED.md) - Complete setup and development guide
+- [Technical Specification](./docs/FINAL_TECHNICAL_SPECIFICATION.md) - Detailed technical architecture
+
+### Operations & Deployment
+- [DevOps Guide](./docs/DEVOPS_GUIDE.md) - Comprehensive deployment, CI/CD, and operational procedures
+- [Environment Configuration](./docs/GETTING_STARTED.md#environment-setup) - Environment variables and configuration
+
+### Development
+- [Monorepo Structure](./docs/GETTING_STARTED.md#project-structure) - Understanding the codebase organization
+- [Import Guidelines](./docs/GETTING_STARTED.md#import-guidelines) - Proper import patterns and scoping
+- [Testing Strategy](./docs/GETTING_STARTED.md#testing) - Unit and E2E testing approaches
+
 ## 🔗 Links
 
-- [Documentation](./docs/)
 - [GitHub Repository](https://github.com/fouadalabady/aurora-monorepo)
 - [Live Demo](https://aurora-monorepo.vercel.app) (Coming Soon)
 
