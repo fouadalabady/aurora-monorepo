@@ -1,0 +1,353 @@
+---
+alwaysApply: true
+---
+# Database Package Testing Documentation
+
+## Overview
+
+The database package (`@workspace/database`) provides comprehensive testing for Prisma ORM integration, database utilities, and seeding functionality. This documentation outlines the testing structure, configuration, and best practices for the database layer.
+
+## Package Structure
+
+```
+packages/database/
+├── src/
+│   ├── client.ts           # Prisma client configuration
+│   ├── index.ts            # Package exports
+│   ├── seed.ts             # Database seeding
+│   ├── utils.ts            # Database utility functions
+│   ├── generated/          # Prisma generated files
+│   └── test/
+│       ├── client.test.ts  # Client configuration tests
+│       ├── seed.test.ts    # Seeding functionality tests
+│       ├── utils.test.ts   # Utility functions tests
+│       ├── setup.ts        # Test setup and mocks
+│       └── types.d.ts      # TypeScript type declarations
+├── prisma/
+│   └── schema.prisma       # Database schema
+├── package.json            # Package configuration
+└── vitest.config.ts        # Vitest configuration
+```
+
+## Testing Scope
+
+### 1. Client Configuration (`client.test.ts`)
+- **Prisma Client Setup**: Tests client instantiation and configuration
+- **Accelerate Extension**: Verifies Prisma Accelerate integration
+- **Database Operations**: Tests CRUD operations for all models:
+  - User operations (create, findUnique, findMany, update, delete)
+  - Service operations
+  - Lead operations
+  - Testimonial operations
+  - Project operations
+  - Post operations
+  - Team member operations
+  - Setting operations
+- **Connection Management**: Tests connect, disconnect, and transaction operations
+- **Process Event Handlers**: Tests graceful shutdown handlers (beforeExit, SIGINT, SIGTERM)
+
+### 2. Database Seeding (`seed.test.ts`)
+- **Complete Seed Process**: Tests the full database seeding workflow
+- **Admin User Creation**: Verifies admin user setup with proper credentials
+- **Service Data**: Tests creation of HVAC services (Installation, Repair & Maintenance, Commercial Solutions)
+- **Content Seeding**: Tests testimonials, team members, projects, and blog posts creation
+- **Settings Configuration**: Tests application settings initialization
+- **Data Integrity**: Ensures all seeded data follows proper schema constraints
+
+### 3. Database Utilities (`utils.test.ts`)
+- **Lead Management**: Tests lead creation, status updates, and retrieval with filters
+- **Service Operations**: Tests service CRUD operations and filtering
+- **Content Management**: Tests content creation, updates, and publishing workflows
+- **Testimonial Management**: Tests testimonial approval and featured status
+- **Project Management**: Tests project lifecycle and status management
+- **Team Management**: Tests team member operations and ordering
+- **Settings Management**: Tests configuration management and validation
+
+## Vitest Configuration
+
+```typescript
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    environment: 'node',           // Node.js environment for Prisma
+    setupFiles: ['./src/test/setup.ts'], // Global test setup
+    globals: true,                 // Enable global test functions
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/**',
+        'src/test/**',
+        'src/generated/**',        // Exclude Prisma generated files
+        '**/*.d.ts',
+        'vitest.config.ts',
+      ],
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+})
+```
+
+## Test Scripts
+
+```json
+{
+  "test": "vitest",                    // Run tests in watch mode
+  "test:run": "vitest run",            // Run tests once
+  "test:coverage": "vitest run --coverage" // Run with coverage report
+}
+```
+
+## Test Dependencies
+
+- **vitest**: Modern testing framework
+- **@vitest/coverage-v8**: Coverage reporting
+- **@types/node**: Node.js type definitions
+- **typescript**: TypeScript compiler
+- **tsx**: TypeScript execution for seeding
+
+## Test Setup (`setup.ts`)
+
+### Mock Configuration
+- **Prisma Client Mock**: Comprehensive mock of all Prisma client methods
+- **Accelerate Extension Mock**: Mocks Prisma Accelerate functionality
+- **Environment Variables**: Sets test-specific environment configuration
+- **Console Mocking**: Reduces test output noise
+
+### Global Mock Functions
+- `createMockUser()`: Creates mock user objects with defaults
+- `createMockService()`: Creates mock service objects
+- `createMockLead()`: Creates mock lead objects
+- `createMockTestimonial()`: Creates mock testimonial objects
+- `createMockProject()`: Creates mock project objects
+- `createMockPost()`: Creates mock blog post objects
+- `createMockTeamMember()`: Creates mock team member objects
+- `createMockSetting()`: Creates mock setting objects
+
+## TypeScript Declarations (`types.d.ts`)
+
+Provides comprehensive type definitions for all mock objects:
+- MockUser, MockService, MockLead interfaces
+- MockTestimonial, MockProject, MockPost interfaces
+- MockTeamMember, MockSetting interfaces
+- Global function declarations for mock creators
+
+## Example Tests
+
+### Client Configuration Test
+```typescript
+it('should export db client', async () => {
+  const { db } = await import('../client')
+  expect(db).toBeDefined()
+  expect(db).toBe(mockPrismaClient)
+})
+```
+
+### Seeding Test
+```typescript
+it('should seed all data successfully', async () => {
+  // Setup mocks
+  mockPrismaClient.user.upsert.mockResolvedValue(mockUser)
+  mockPrismaClient.service.upsert.mockResolvedValue(mockService)
+  
+  await seedDatabase()
+  
+  // Verify admin user creation
+  expect(mockPrismaClient.user.upsert).toHaveBeenCalledWith({
+    where: { email: 'admin@aurora.dev' },
+    update: {},
+    create: {
+      email: 'admin@aurora.dev',
+      name: 'Aurora Admin',
+      role: 'ADMIN',
+      emailVerified: expect.any(Date),
+    },
+  })
+})
+```
+
+### Utility Function Test
+```typescript
+it('should create a lead with default values', async () => {
+  const mockLead = createMockLead()
+  mockPrismaClient.lead.create.mockResolvedValue(mockLead)
+
+  const leadData = {
+    name: 'Test Lead',
+    email: 'test@example.com',
+    phone: '+1234567890',
+    message: 'Test message',
+  }
+
+  const result = await leadUtils.createLead(leadData)
+
+  expect(mockPrismaClient.lead.create).toHaveBeenCalledWith({
+    data: {
+      ...leadData,
+      source: 'WEBSITE',
+      status: 'NEW',
+      priority: 'MEDIUM',
+    },
+    include: {
+      service: true,
+    },
+  })
+  expect(result).toEqual(mockLead)
+})
+```
+
+## Mock Strategies
+
+### 1. Prisma Client Mocking
+- Complete mock of all Prisma client methods
+- Consistent return value structure
+- Proper method chaining support
+
+### 2. Extension Mocking
+- Prisma Accelerate extension mocked
+- Maintains method chaining behavior
+
+### 3. Environment Isolation
+- Test-specific environment variables
+- Isolated database configuration
+
+## Test Coverage Analysis
+
+### Current Coverage Areas
+- ✅ Client configuration and setup
+- ✅ Database connection management
+- ✅ CRUD operations for all models
+- ✅ Seeding functionality
+- ✅ Utility functions
+- ✅ Error handling
+- ✅ Process event handlers
+
+### Coverage Exclusions
+- Prisma generated files (`src/generated/**`)
+- Test files themselves (`src/test/**`)
+- Type definition files (`**/*.d.ts`)
+- Configuration files
+
+## Best Practices
+
+### 1. Mock Management
+- Clear mocks between tests using `vi.clearAllMocks()`
+- Use consistent mock data structures
+- Leverage global mock creator functions
+
+### 2. Test Organization
+- Group related tests in describe blocks
+- Use descriptive test names
+- Test both success and error scenarios
+
+### 3. Data Integrity
+- Verify all required fields in database operations
+- Test constraint validation
+- Ensure proper relationship handling
+
+### 4. Environment Safety
+- Use test-specific environment variables
+- Mock external dependencies
+- Isolate database operations
+
+## Running Tests
+
+```bash
+# Run all tests in watch mode
+pnpm test
+
+# Run tests once
+pnpm test:run
+
+# Run tests with coverage
+pnpm test:coverage
+
+# Run specific test file
+pnpm test client.test.ts
+
+# Run tests matching pattern
+pnpm test --grep "lead"
+```
+
+## Integration Points
+
+### With Other Packages
+- **Core Package**: Shares business logic and validation
+- **Config Package**: Uses environment configuration
+- **Auth Package**: Integrates with user management
+
+### With Applications
+- **API App**: Provides database operations
+- **CMS App**: Supports content management
+- **Web App**: Serves public data
+
+## Common Issues and Solutions
+
+### 1. TypeScript Global Declarations
+**Issue**: Global mock functions not recognized
+**Solution**: Ensure `types.d.ts` is properly configured and included
+
+### 2. Mock Function Persistence
+**Issue**: Mock state persists between tests
+**Solution**: Use `vi.clearAllMocks()` in `beforeEach` hooks
+
+### 3. Prisma Client Mocking
+**Issue**: Complex Prisma client methods not properly mocked
+**Solution**: Use comprehensive mock setup in `setup.ts`
+
+### 4. Environment Variables
+**Issue**: Production environment variables interfering with tests
+**Solution**: Override with test-specific values in setup
+
+## Future Enhancements
+
+### 1. Integration Testing
+- Add tests with real database connections
+- Test migration scenarios
+- Validate schema changes
+
+### 2. Performance Testing
+- Add benchmarks for database operations
+- Test query optimization
+- Monitor connection pooling
+
+### 3. Error Scenario Testing
+- Test database connection failures
+- Validate constraint violations
+- Test transaction rollbacks
+
+### 4. Schema Validation
+- Add tests for schema migrations
+- Validate data type constraints
+- Test relationship integrity
+
+## Database Schema Testing
+
+### Models Covered
+- **User**: Authentication and authorization
+- **Service**: HVAC service offerings
+- **Lead**: Customer inquiries and lead management
+- **LeadActivity**: Lead interaction tracking
+- **Testimonial**: Customer feedback
+- **Project**: Completed work showcase
+- **Post**: Blog content management
+- **Page**: Static page content
+- **TeamMember**: Staff information
+- **Setting**: Application configuration
+
+## Summary
+
+The database package testing provides comprehensive coverage of:
+- ✅ Prisma client configuration and setup
+- ✅ Database seeding and initialization
+- ✅ Utility functions for all business operations
+- ✅ Mock strategies for isolated testing
+- ✅ TypeScript support with proper declarations
+- ✅ Coverage reporting and analysis
+- ✅ Integration with the broader monorepo testing strategy
+
+The testing infrastructure ensures reliable database operations while maintaining fast test execution through comprehensive mocking strategies.

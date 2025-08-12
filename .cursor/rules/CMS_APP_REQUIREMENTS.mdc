@@ -1,0 +1,553 @@
+---
+alwaysApply: true
+---
+# Aurora CMS Application Requirements
+
+> **Application**: Admin CMS Interface (apps/cms)\
+> **Purpose**: Fresh-by-default content and lead management with real-time updates\
+> **Technology**: Next.js 14+, NextAuth.js, TypeScript, Tailwind CSS, FLUX-compliant architecture\
+> **Priority**: High - Business operations center
+
+***
+
+## 1. Product Overview
+
+The Aurora CMS Application is a fresh-by-default administrative interface that empowers service business owners and their teams to manage content, track leads, analyze performance, and control their online presence with guaranteed data freshness. Built with feature-based execution (F1-F8) and strict import boundaries, it ensures administrators always see the most current information with no stale content.
+
+**Primary Goals**: Real-time business operations, maximize lead conversion with fresh data, simplify content management, provide actionable insights with guaranteed data freshness.
+
+**Target Users**: Business owners, office managers, marketing coordinators, and service technicians who need to manage leads, update content, and track business performance with real-time data access.
+
+## 2. Core Features
+
+### 2.1 User Roles & Authentication
+
+**Authentication Method**: NextAuth.js with JWT strategy, bcrypt password hashing, 30-day session expiration
+
+| Role   | Registration Method   | Core Permissions                                                                                          | Authentication Level |
+| ------ | --------------------- | --------------------------------------------------------------------------------------------------------- | -------------------- |
+| Admin  | Direct database setup | Full system access, user management, content approval, lead management, analytics access, system settings | Full CMS Access |
+| Editor | Admin invitation      | Content creation/editing/publishing, lead viewing/editing, media management, basic analytics              | Content & Lead Management |
+| Agent  | Admin invitation      | Lead viewing/updating, basic content access, assigned lead management                                     | Lead Management Only |
+| Viewer | Admin invitation      | Read-only access to published content, lead viewing only, basic dashboard access                          | Read-Only Access |
+
+**Security Features**:
+- JWT tokens with role-based claims
+- Middleware route protection for `/admin/*` paths
+- Fresh session validation with `revalidate = 0`
+- Secure password requirements (8+ chars, mixed case, numbers, symbols)
+- Session timeout and automatic logout
+- CSRF protection enabled by default
+
+### 2.2 Feature Module
+
+Our CMS application implements feature-based modules aligned with F1-F8 execution:
+
+1. **Dashboard (F1)**: Real-time analytics, fresh lead counts, system health, quick actions with `revalidate = 0`.
+2. **Authentication & RBAC (F2)**: NextAuth.js integration with JWT strategy, role-based middleware protection, secure session management, user creation/management workflows.
+3. **Lead Management (F3)**: Fresh lead data, real-time updates, conversion tracking, assignment with instant notifications.
+4. **Content Management (F5)**: Service pages, blog posts, testimonials with instant cache invalidation via `revalidateTag()`.
+5. **Media Library**: Vercel Blob integration, image optimization, asset management with CDN delivery.
+6. **Internationalization (F6)**: Content translation, RTL support, locale-specific publishing.
+7. **Performance Monitoring (F7)**: Real-time metrics, Core Web Vitals, SEO tracking, cache hit rates.
+8. **Quality Assurance (F8)**: Content validation, publishing workflows, error monitoring with fresh data.
+
+### 2.3 Page Details
+
+| Page Name            | Module Name             | Feature Description                                                                               |
+| -------------------- | ----------------------- | ------------------------------------------------------------------------------------------------- |
+| Dashboard            | Real-time Overview      | Fresh lead counts, conversion metrics, system health with `revalidate = 0`, no stale data         |
+| Dashboard            | Activity Feed           | Live lead updates, content changes, user actions with WebSocket-like freshness                    |
+| Dashboard            | Quick Actions           | One-click lead assignment, content publishing, cache invalidation triggers                        |
+| Authentication       | NextAuth Integration    | JWT session management with 30-day expiration, credential validation, secure login/logout flows |
+| Authentication       | Role-Based Middleware   | Route protection for `/admin/*`, role verification, unauthorized redirect handling |
+| Authentication       | User Management         | Admin user creation interface, role assignment, password reset workflows, account deactivation |
+| Authentication       | Security Features       | bcrypt password hashing, CSRF protection, session timeout, fresh session validation |
+| Lead Management      | Fresh Lead Dashboard    | Real-time lead pipeline, instant status updates, no-cache data fetching with guaranteed freshness |
+| Lead Management      | Lead Details            | Individual lead view, activity timeline, communication history with fresh data                    |
+| Lead Management      | Assignment System       | Real-time lead assignment, notification system, status tracking with instant updates              |
+| Content Management   | Service Editor          | Rich text editor with shadcn/ui components, SEO optimization, instant preview                     |
+| Content Management   | Blog System             | Post creation, category management, tag-based cache revalidation                                  |
+| Content Management   | Content Publishing      | Instant publish with `revalidateTag('content:services')` cache invalidation                       |
+| Media Library        | Vercel Blob Integration | File upload, optimization, CDN delivery, asset management                                         |
+| Internationalization | Content Translation     | Multi-language content, RTL support, locale-specific publishing                                   |
+| Settings             | FLUX Configuration      | Environment variables, cache settings, import boundary enforcement                                |
+| Performance          | Real-time Monitoring    | Core Web Vitals, API response times, cache hit rates, error tracking                              |
+
+## 3. Core Process
+
+### 3.1 FLUX-Compliant Content Management Workflow
+
+**Fresh-by-Default Content Process:**
+
+1. **Planning**: Content strategy with real-time analytics, fresh performance data
+2. **Creation**: Draft content using shadcn/ui components, rich text editor, SEO optimization
+3. **Review**: Real-time collaboration, fresh content status, instant feedback
+4. **Publishing**: Instant publish with `revalidateTag('content:services')` cache invalidation
+5. **Verification**: Immediate cache validation, fresh content delivery confirmation
+6. **Analytics**: Real-time performance tracking with `revalidate = 0` for admin views
+
+### 3.2 Real-Time Lead Management Process
+
+**Fresh-by-Default Lead Lifecycle:**
+
+1. **Capture**: Instant lead import with real-time notifications, no stale data
+2. **Qualification**: Fresh lead scoring, immediate service matching, priority assignment
+3. **Assignment**: Real-time assignment with instant team notifications
+4. **Follow-up**: Fresh communication history, real-time status updates
+5. **Conversion**: Instant conversion tracking, fresh pipeline updates
+6. **Analysis**: Real-time conversion metrics with guaranteed data freshness
+
+### 3.3 FLUX-Compliant User Journey Flow
+
+```mermaid
+graph TD
+    A[NextAuth Login] --> B[Fresh Dashboard]
+    B --> C{Choose Action}
+    C -->|Manage Content| D[Content Editor]
+    C -->|Handle Leads| E[Fresh Lead Management]
+    C -->|View Analytics| F[Real-time Analytics]
+    C -->|Team Management| G[User Management]
+    
+    D --> H[Create/Edit with shadcn/ui]
+    H --> I[Preview & SEO Check]
+    I --> J[Publish Content]
+    J --> K[revalidateTag Trigger]
+    K --> L[Fresh Website Update]
+    
+    E --> M[Fresh Lead Pipeline]
+    M --> N[Real-time Lead Details]
+    N --> O[Instant Status Update]
+    O --> P[Fresh Notification Send]
+    
+    F --> Q[Real-time Metrics]
+    Q --> R[Fresh Lead Analytics]
+    R --> S[Live Performance Data]
+    
+    G --> T[Manage Team]
+    T --> U[Set RBAC Permissions]
+    U --> V[Monitor Fresh Activity]
+```
+
+## 4. User Interface Design
+
+### 4.1 FLUX-Compliant Design Style
+
+* **Primary Colors**: Professional Blue (#1E40AF), Success Green (#059669), Warning Orange (#D97706), Danger Red (#DC2626)
+
+* **Secondary Colors**: Neutral Gray (#64748B), Light Background (#F8FAFC), Card Background (#FFFFFF), Border Gray (#E2E8F0)
+
+* **Button Style**: shadcn/ui Button component with variants (solid/outline/ghost), consistent styling
+
+* **Typography**: Inter font family via shadcn/ui, 14px base for interface, clear hierarchy (24px/18px/16px/14px/12px)
+
+* **Layout Style**: shadcn/ui components only, sidebar navigation, card-based content areas, responsive grid system
+
+* **Icons**: Lucide React icons via shadcn/ui, 20px interface size, consistent stroke width
+
+* **Components**: All UI via `pnpm dlx shadcn-ui@latest add` - no hand-coded components
+
+### 4.2 FLUX-Compliant Page Design Overview
+
+| Page Name       | Module Name      | UI Elements                                                                         |
+| --------------- | ---------------- | ----------------------------------------------------------------------------------- |
+| Dashboard       | Real-time Cards  | shadcn/ui Card components, fresh data indicators, real-time status, responsive grid |
+| Dashboard       | Activity Feed    | shadcn/ui components, real-time updates, fresh timestamps, live data indicators     |
+| Dashboard       | Quick Actions    | shadcn/ui Button, Dialog, Form components, instant feedback, loading states         |
+| Lead Management | Fresh Pipeline   | shadcn/ui components, real-time drag-drop, fresh status badges, instant search      |
+| Lead Management | Lead Details     | shadcn/ui layout, fresh contact data, real-time timeline, instant action feedback   |
+| Content Editor  | shadcn/ui Editor | Rich text with shadcn/ui components, instant preview, real-time save status         |
+| Content Editor  | Media Library    | shadcn/ui components, Vercel Blob integration, instant upload feedback              |
+| User Management | Team Table       | shadcn/ui Table component, role badges, status indicators, action dropdowns         |
+| Analytics       | Real-time Charts | Fresh data visualization, shadcn/ui components, live metric updates                 |
+
+### 4.3 Responsiveness
+
+Desktop-first design optimized for admin workflows, with tablet adaptation for field use. Mobile view provides essential functions like lead contact and basic content updates. Responsive breakpoints at 768px (tablet) and 1024px (desktop).
+
+## 5. Technical Architecture
+
+### 5.1 FLUX-Compliant Technology Stack
+- **Framework**: Next.js 14+ with App Router for optimal performance and fresh data
+- **Language**: TypeScript 5 with strict mode for type safety and developer experience
+- **Styling**: Tailwind CSS 3 for utility-first styling and shadcn/ui compatibility
+- **UI Components**: shadcn/ui components only (added via CLI), no hand-coded components
+- **Authentication**: NextAuth.js with JWT strategy for secure session management
+- **Forms**: React Hook Form with Zod validation via shadcn/ui Form components
+- **State Management**: Fresh server components with `revalidate = 0`, minimal client state
+- **Database**: Prisma ORM with fresh-by-default queries, no stale data
+- **Real-time**: Fresh data fetching with `{ cache: 'no-store' }` for admin interfaces
+
+### 5.2 FLUX-Compliant Architecture Diagram
+
+```mermaid
+graph TD
+    A[CMS Frontend] --> B[NextAuth.js JWT]
+    A --> C[Fresh Server Components]
+    C --> D[API Routes]
+    D --> E[Prisma ORM]
+    E --> F[PostgreSQL]
+    D --> G[revalidateTag]
+    G --> H[Web App Cache Invalidation]
+    
+    subgraph "Frontend Layer (Fresh-by-Default)"
+        A
+        B
+        C
+    end
+    
+    subgraph "API Layer (Node Runtime)"
+        D
+        G
+    end
+    
+    subgraph "Data Layer"
+        E
+        F
+    end
+    
+    subgraph "Cache Management"
+        H
+    end
+```
+
+### 5.3 FLUX-Compliant Import & Scoping Standards
+
+**Allowed Import Patterns:**
+- Shared packages: `@workspace/database`, `@workspace/ui`, `@workspace/core`
+- App-local imports: `@cms/*` for internal CMS modules
+- shadcn/ui components: Via `@workspace/ui` re-exports only
+- External packages: Standard npm packages and Next.js modules
+
+**Forbidden Import Patterns:**
+- Direct imports from other apps: `@web/*`, `@api/*`
+- Cross-app relative imports: `../../../apps/web/src/*`
+- Hand-coded UI components (use shadcn/ui only)
+- Direct shadcn/ui imports (use `@workspace/ui` re-exports)
+
+**TypeScript Configuration:**
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@workspace/*": ["../../packages/*/src"],
+      "@cms/*": ["./src/*"]
+    }
+  }
+}
+```
+
+**ESLint Enforcement:**
+```json
+{
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["@web/*", "@api/*"],
+            "message": "CMS cannot import from other apps. Use @workspace/* packages."
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 5.4 FLUX-Compliant Fresh Data Strategy
+
+**Server Components (Fresh by Default):**
+```typescript
+// All CMS pages use fresh data - mandatory for admin interfaces
+export const revalidate = 0
+
+// Or use unstable_noStore for dynamic data
+import { unstable_noStore as noStore } from 'next/cache'
+
+export default async function LeadsPage() {
+  noStore() // Ensure fresh data - no stale admin data allowed
+  const leads = await getLeads()
+  return <LeadsList leads={leads} />
+}
+```
+
+**API Fetching (No Cache - FLUX Rule):**
+```typescript
+// Client-side fetches must use no-store for admin data
+const response = await fetch('/api/leads', {
+  cache: 'no-store' // FLUX requirement for admin interfaces
+})
+
+// Server-side fetches in CMS - always fresh
+const leads = await fetch(apiUrl, {
+  cache: 'no-store',
+  headers: { 
+    Authorization: `Bearer ${token}`,
+    'Cache-Control': 'no-store'
+  }
+})
+```
+
+**Cache Invalidation Triggers:**
+```typescript
+// After content updates, trigger web app cache invalidation
+import { revalidateTag } from 'next/cache'
+
+async function updateService(data: ServiceData) {
+  await prisma.service.update({ where: { id }, data })
+  
+  // Invalidate web app cache
+  revalidateTag('content:services')
+  
+  // CMS stays fresh by default
+  return { success: true }
+}
+```
+
+### 5.5 FLUX-Compliant Authentication & Security
+
+**NextAuth Configuration (FLUX Standard):**
+```typescript
+export const authOptions: NextAuthOptions = {
+  providers: [
+    CredentialsProvider({
+      credentials: {
+        email: { type: 'email' },
+        password: { type: 'password' }
+      },
+      authorize: async (credentials) => {
+        // Validate against Prisma database
+        const user = await prisma.user.findUnique({
+          where: { email: credentials?.email }
+        })
+        // Password verification with fresh data
+        return user
+      }
+    })
+  ],
+  session: { strategy: 'jwt' }, // FLUX requirement
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error'
+  },
+  callbacks: {
+    jwt: ({ token, user }) => ({ ...token, ...user }),
+    session: ({ session, token }) => ({ 
+      ...session, 
+      user: { ...token, role: token.role } 
+    })
+  }
+}
+```
+
+**Role-Based Access Control:**
+```typescript
+// Middleware for protected CMS routes
+export async function requireAuth(role?: string) {
+  const session = await getServerSession(authOptions)
+  
+  if (!session) {
+    redirect('/auth/signin')
+  }
+  
+  if (role && session.user.role !== role) {
+    throw new Error('Insufficient permissions')
+  }
+  
+  return session
+}
+```
+
+## 6. Technical Specifications
+
+### 6.1 Architecture
+
+* **Framework**: Next.js 14+ with App Router
+
+* **Authentication**: NextAuth.js with JWT and database sessions
+
+* **State Management**: Zustand for global state, React Query for server state
+
+* **Forms**: React Hook Form with Zod validation
+
+* **UI Components**: shadcn/ui with custom admin components
+
+* **Rich Text Editor**: Tiptap with custom extensions
+
+* **Charts**: Recharts for analytics visualization
+
+* **File Upload**: Custom upload component with progress tracking
+
+### 6.2 Security Requirements
+
+* **Authentication**: Multi-factor authentication option, session management, password policies
+
+* **Authorization**: Role-based access control (RBAC), feature-level permissions, API endpoint protection
+
+* **Data Protection**: Input sanitization, XSS prevention, CSRF tokens, secure file uploads
+
+* **Audit Trail**: User action logging, data change tracking, access monitoring
+
+* **Session Security**: Automatic logout, concurrent session limits, suspicious activity detection
+
+### 6.3 Performance Requirements
+
+* **Page Load Time**: < 1 second for dashboard, < 2 seconds for data-heavy pages
+
+* **Data Loading**: Pagination for large datasets, infinite scroll for feeds, optimistic updates
+
+* **Real-time Updates**: WebSocket connections for live notifications, automatic data refresh
+
+* **Offline Capability**: Service worker for basic offline functionality, sync when reconnected
+
+* **Bundle Optimization**: Code splitting, lazy loading, tree shaking, minimal bundle size
+
+### 6.4 Integration Requirements
+
+* **Database**: Prisma ORM with PostgreSQL, real-time subscriptions, optimistic updates
+
+* **API**: GraphQL for complex queries, REST for simple operations, real-time subscriptions
+
+* **Email**: Automated notifications, template system, delivery tracking
+
+* **Search**: Typesense integration for content and lead search
+
+* **Analytics**: Plausible Analytics integration, custom event tracking
+
+* **File Storage**: Local file system with cloud backup option, image optimization
+
+## 7. User Stories
+
+### Epic 1: Lead Management
+
+**As a business owner, I want to efficiently manage and convert leads so I can grow my business and maximize revenue.**
+
+* **Story 1.1**: As a business owner, I want to see all new leads in one place so I can respond quickly.
+
+* **Story 1.2**: As a team member, I want to be assigned leads based on my expertise so I can provide the best service.
+
+* **Story 1.3**: As a business owner, I want to track lead progression through the sales pipeline so I can identify bottlenecks.
+
+* **Story 1.4**: As a team member, I want to log all interactions with leads so I can maintain context and continuity.
+
+* **Story 1.5**: As a business owner, I want to set follow-up reminders so no leads fall through the cracks.
+
+### Epic 2: Content Management
+
+**As a business owner, I want to easily update my website content so I can keep information current and attract more customers.**
+
+* **Story 2.1**: As a business owner, I want to update service descriptions so customers have accurate information.
+
+* **Story 2.2**: As a marketing coordinator, I want to publish blog posts so I can improve SEO and attract more visitors.
+
+* **Story 2.3**: As a business owner, I want to showcase completed projects so potential customers can see my work quality.
+
+* **Story 2.4**: As a team member, I want to upload project photos so we can build a portfolio of our work.
+
+* **Story 2.5**: As a business owner, I want to manage customer testimonials so I can build trust with potential customers.
+
+### Epic 3: Team Collaboration
+
+**As a business owner, I want to manage my team's access and activities so I can maintain control while enabling productivity.**
+
+* **Story 3.1**: As a business owner, I want to invite team members with specific roles so I can control access to sensitive information.
+
+* **Story 3.2**: As a team member, I want to see my assigned tasks and leads so I know what to work on.
+
+* **Story 3.3**: As a business owner, I want to monitor team activity so I can ensure accountability and productivity.
+
+* **Story 3.4**: As a team member, I want to communicate with colleagues about leads so we can collaborate effectively.
+
+* **Story 3.5**: As a business owner, I want to set notification preferences so I stay informed without being overwhelmed.
+
+### Epic 4: Business Analytics
+
+**As a business owner, I want to understand my business performance so I can make data-driven decisions for growth.**
+
+* **Story 4.1**: As a business owner, I want to see lead conversion rates so I can measure sales effectiveness.
+
+* **Story 4.2**: As a business owner, I want to track lead sources so I can invest in the most effective marketing channels.
+
+* **Story 4.3**: As a business owner, I want to monitor website performance so I can optimize for better results.
+
+* **Story 4.4**: As a business owner, I want to analyze service popularity so I can focus on profitable offerings.
+
+* **Story 4.5**: As a business owner, I want to track revenue pipeline so I can forecast business growth.
+
+## 8. Development Priorities
+
+### Phase 1: Authentication & Core Layout (Week 5)
+
+1. **Authentication System**: NextAuth.js setup with email/password and role-based access
+2. **Layout Structure**: Sidebar navigation, header with user menu, responsive layout
+3. **Dashboard Foundation**: Basic dashboard with placeholder metrics and navigation
+4. **User Management**: Basic user invitation and role assignment functionality
+5. **Protected Routes**: Middleware for route protection and role-based access control
+
+### Phase 2: Lead Management (Week 6)
+
+1. **Lead Pipeline**: Kanban board with drag-and-drop functionality for lead status management
+2. **Lead Details**: Comprehensive lead information display with contact details and history
+3. **Lead Assignment**: System for assigning leads to team members based on service type
+4. **Activity Tracking**: Timeline of all interactions and status changes for each lead
+5. **Follow-up System**: Reminder system for scheduled follow-ups and task management
+
+### Phase 3: Content Management (Week 7)
+
+1. **Rich Text Editor**: Tiptap integration for creating and editing service pages and blog posts
+2. **Media Library**: File upload system with image optimization and organization
+3. **Service Management**: Interface for creating and managing service offerings and pricing
+4. **Project Showcase**: System for managing project galleries and case studies
+5. **SEO Tools**: Meta tag management, URL optimization, and content analysis
+
+### Phase 4: Analytics & Advanced Features (Week 8)
+
+1. **Analytics Dashboard**: Charts and metrics for lead conversion and business performance
+2. **Notification System**: Real-time notifications for new leads and important events
+3. **Search Functionality**: Global search across leads, content, and projects
+4. **Export Features**: Data export capabilities for leads and analytics
+5. **Mobile Optimization**: Responsive design for tablet and mobile access
+
+## 9. Success Metrics
+
+### User Adoption Metrics
+
+* **Daily Active Users**: > 80% of team members use system daily
+
+* **Feature Utilization**: > 70% of features used regularly by appropriate roles
+
+* **User Satisfaction**: > 4.5/5 rating in user feedback surveys
+
+* **Training Time**: < 2 hours for new users to become productive
+
+### Business Impact Metrics
+
+* **Lead Response Time**: < 1 hour average response time to new leads
+
+* **Lead Conversion Rate**: > 20% improvement in lead-to-customer conversion
+
+* **Content Update Frequency**: > 2 content updates per week
+
+* **Team Productivity**: > 30% reduction in administrative time
+
+### Technical Performance Metrics
+
+* **System Uptime**: > 99.5% availability during business hours
+
+* **Page Load Speed**: < 1 second for dashboard, < 2 seconds for data pages
+
+* **Data Accuracy**: > 99% accuracy in lead and content synchronization
+
+* **Security Incidents**: Zero security breaches or unauthorized access
+
+### Operational Efficiency Metrics
+
+* **Lead Processing Time**: > 50% reduction in time from lead to first contact
+
+* **Content Publishing Time**: > 60% reduction in time from creation to publication
+
+* **Team Coordination**: > 40% improvement in team communication
+

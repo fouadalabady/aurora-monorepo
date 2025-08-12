@@ -1,0 +1,250 @@
+---
+alwaysApply: true
+---
+
+# Aurora Project Requirements (Feature-Based Execution)
+
+## 1. Product Overview
+Aurora is a conversion-first business website platform designed to maximize RFQ/Contact flows and deliver fresh content with optimal performance. Built as a monorepo with three applications (web, cms, api), the platform prioritizes lead generation, multilingual support (Arabic/English), and real-time content management without analytics dependencies.
+
+## 2. Core Features
+
+### 2.1 User Roles
+| Role | Registration Method | Core Permissions |
+|------|---------------------|------------------|
+| Admin | Direct database seeding | Full CMS access, user management, content publishing |
+| Editor | Admin invitation | Content creation/editing, lead management |
+| Visitor | No registration | Browse website, submit contact forms |
+
+### 2.2 Feature Module
+Our platform consists of 8 sequential features with deterministic outcomes:
+
+1. **F1 - Monorepo Bootstrap**: Complete workspace setup with tooling and build configuration
+2. **F2 - Auth & RBAC**: Secure authentication system with role-based access control
+3. **F3 - Leads Capture**: Contact form endpoints with CAPTCHA and email notifications
+4. **F4 - CMS Leads Module**: Admin interface for lead management with real-time data
+5. **F5 - Content Management**: Dynamic content system with instant revalidation
+6. **F6 - i18n & RTL**: Arabic/English localization with proper RTL layout support
+7. **F7 - Performance & SEO**: Metadata optimization and caching strategy (no analytics)
+8. **F8 - QA & Hardening**: Comprehensive testing and error handling
+
+### 2.3 Page Details
+
+| Page Name | Module Name | Feature Description |
+|-----------|-------------|--------------------|
+| Homepage | Hero Section | Conversion-focused landing with sticky CTA, multilingual content, optimized loading |
+| Homepage | Services Showcase | Dynamic service listings with ISR caching, tag-based revalidation |
+| Homepage | Contact Form | reCAPTCHA-protected form with Zod validation, SMTP notifications |
+| About | Company Info | Static content with i18n support, SEO optimization |
+| Services | Service Pages | Dynamic content from CMS, ISR with tag revalidation |
+| Blog | Post Listings | Paginated blog posts with search, multilingual content |
+| Blog | Post Details | Individual post pages with metadata, social sharing |
+| Contact | RFQ Form | Primary conversion form with lead capture, CAPTCHA protection |
+| CMS Dashboard | Analytics Overview | Lead metrics, content stats, fresh data display |
+| CMS Leads | Lead Management | DataTable with filters, status updates, assignment workflow |
+| CMS Content | Content Editor | Rich text editor for posts/pages, media management |
+| CMS Users | User Management | Role assignment, access control, admin functions |
+| API Health | System Status | Health checks, database connectivity, service monitoring |
+| API Leads | Capture Endpoints | REST/GraphQL endpoints for lead submission and management |
+| API Content | CMS Endpoints | CRUD operations for content with tag-based cache invalidation |
+
+## 3. Core Process
+
+### 3.1 Feature Execution Flow
+Each feature follows the mandatory **Plan → Implement → Test → Deploy → Verify** loop:
+
+1. **Planning Phase**: Create feature brief with problem statement, outcome definition, surface mapping, data requirements, API specifications, freshness strategy, and acceptance criteria
+2. **Implementation Phase**: Database schema → API endpoints → CMS interface → Web pages
+3. **Testing Phase**: Unit tests (Vitest), E2E tests (Playwright), contract validation
+4. **Deployment Phase**: Vercel previews, CI validation, production deployment
+5. **Verification Phase**: Acceptance criteria validation, performance checks, freshness verification
+
+### 3.2 User Journey Flow
+```mermaid
+graph TD
+    A[Visitor Lands] --> B[Browse Content]
+    B --> C[View Services]
+    C --> D[Contact/RFQ Form]
+    D --> E[Lead Captured]
+    E --> F[Email Notification]
+    F --> G[CMS Lead Management]
+    G --> H[Admin Follow-up]
+    
+    I[Admin Login] --> J[CMS Dashboard]
+    J --> K[Manage Leads]
+    J --> L[Edit Content]
+    L --> M[Publish Changes]
+    M --> N[Tag Revalidation]
+    N --> O[Web Update]
+```
+
+## 4. User Interface Design
+
+### 4.1 Design Style
+- **Primary Colors**: Conversion-optimized palette with strong call-to-action elements
+- **Button Style**: shadcn/ui components with consistent interaction patterns
+- **Font**: Optimized web fonts with proper loading strategies
+- **Layout Style**: Mobile-first responsive design with sticky CTAs
+- **Icon Style**: Consistent iconography supporting RTL/LTR layouts
+
+### 4.2 Page Design Overview
+
+| Page Name | Module Name | UI Elements |
+|-----------|-------------|-------------|
+| Homepage | Hero Section | Full-width banner, animated CTAs, conversion-focused messaging, mobile-optimized |
+| Homepage | Services Grid | Card-based layout, hover effects, responsive grid, RTL-compatible |
+| Contact | RFQ Form | Multi-step form, real-time validation, CAPTCHA integration, success states |
+| CMS Dashboard | Metrics Cards | Real-time data display, responsive charts, fresh data indicators |
+| CMS Leads | DataTable | Sortable columns, filters, pagination, status indicators, bulk actions |
+| CMS Content | Rich Editor | WYSIWYG editor, media upload, preview mode, publish workflow |
+
+### 4.3 Responsiveness
+Mobile-first responsive design with touch optimization. RTL layout support for Arabic content using logical CSS properties via Tailwind RTL plugin. Sticky CTAs on mobile devices for optimal conversion.
+
+## 5. Technical Architecture
+
+### 5.1 Technology Stack
+- **Frontend**: Next.js 14+ (App Router), TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: Prisma ORM, PostgreSQL, NextAuth.js, Zod validation
+- **API**: GraphQL Yoga/Helix, REST endpoints, Node.js runtime
+- **Deployment**: Vercel (3 projects), managed PostgreSQL
+- **Testing**: Vitest (unit), Playwright (E2E), contract testing
+
+### 5.2 Import & Scoping Standards
+
+**Allowed Import Patterns:**
+- Shared packages: `@workspace/ui`, `@workspace/database`, `@workspace/core`, `@workspace/config`
+- App-local imports: `@web/*` (website), `@cms/*` (admin), `@api/*` (backend)
+- External packages: Standard npm packages
+
+**Forbidden Import Patterns:**
+- Direct imports from other app's `src/*` directories
+- Cross-app imports (e.g., web importing from cms)
+- Hand-coded shadcn/ui components (must use CLI)
+
+**TypeScript Configuration:**
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@workspace/*": ["packages/*/src"],
+      "@web/*": ["apps/web/src/*"],
+      "@cms/*": ["apps/cms/src/*"],
+      "@api/*": ["apps/api/src/*"]
+    }
+  }
+}
+```
+
+**ESLint Enforcement:**
+```json
+{
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["@/*"],
+            "message": "Use scoped aliases (@web|@cms|@api|@workspace)."
+          },
+          {
+            "group": ["apps/*"],
+            "message": "Do not import across apps. Extract to packages/."
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 5.3 Caching & Freshness Strategy
+
+**CMS (Admin) - Fresh by Default:**
+- Server components: `export const revalidate = 0`
+- API fetches: `fetch(url, { cache: 'no-store' })`
+- Real-time data: `unstable_noStore()` for critical sections
+
+**API - No Cache Policy:**
+- All endpoints: `Cache-Control: no-store`
+- Route handlers: `export const dynamic = 'force-dynamic'`
+- Node runtime: `export const runtime = 'node'` (Prisma requirement)
+
+**Web (Public) - ISR with Tag Revalidation:**
+- Content pages: `export const revalidate = 3600`
+- Tagged fetches: `fetch(url, { next: { tags: ['content:services'] } })`
+- Mutation triggers: `revalidateTag('content:<model>')` after CMS changes
+
+### 5.4 Security & Validation
+- **Form Security**: Server-side reCAPTCHA verification + Zod input validation
+- **Authentication**: NextAuth.js with JWT/session strategy
+- **Authorization**: Role-based access control in API layer
+- **Secrets Management**: Environment variables only, never client-exposed
+- **Error Handling**: Uniform error contract `{ code, message, details? }`
+
+## 6. Environment Configuration
+
+### 6.1 Required Environment Variables
+
+| Variable | Apps | Description |
+|----------|------|-------------|
+| `DATABASE_URL` | api, cms | PostgreSQL connection string |
+| `DIRECT_URL` | api, cms | Direct database connection for migrations |
+| `NEXTAUTH_URL` | cms | Authentication callback URL |
+| `NEXTAUTH_SECRET` | cms | NextAuth.js secret key |
+| `RECAPTCHA_SITE_KEY` | web | Client-side reCAPTCHA key |
+| `RECAPTCHA_SECRET_KEY` | api | Server-side reCAPTCHA verification |
+| `SMTP_HOST` | api | Email server hostname |
+| `SMTP_USER` | api | SMTP authentication username |
+| `SMTP_PASS` | api | SMTP authentication password |
+| `SMTP_FROM` | api | Default sender email address |
+
+### 6.2 Deployment Configuration
+
+**Vercel Projects:**
+- **Web**: Public website with ISR caching
+- **CMS**: Admin interface with fresh data requirements
+- **API**: Backend services with Node.js runtime
+
+**Build Commands:**
+- Web: `cd ../.. && pnpm build --filter=web`
+- CMS: `cd ../.. && pnpm build --filter=cms`
+- API: `cd ../.. && pnpm build --filter=api`
+
+## 7. Quality Assurance
+
+### 7.1 CI/CD Requirements
+- **Type Safety**: `typecheck` for all apps
+- **Code Quality**: `lint` with strict ESLint rules
+- **Build Validation**: `build` for each application
+- **Unit Testing**: Vitest with mocked Prisma
+- **E2E Testing**: Playwright smoke tests
+- **Import Validation**: No cross-app import violations
+- **Bundle Monitoring**: Size warnings and optimization
+
+### 7.2 Definition of Done
+Each feature is complete when:
+- All acceptance criteria are verified and green
+- No cross-app imports exist in the codebase
+- shadcn/ui components are CLI-installed only
+- Admin/CMS displays fresh data (no stale content)
+- Public pages revalidate within 30 seconds of CMS mutations
+- CI passes all quality gates without warnings
+- Performance metrics meet conversion-first standards
+
+## 8. Risk Mitigation
+
+### 8.1 Technical Risks
+- **Stale Data**: Mitigated by fresh-by-default CMS policy and tag-based revalidation
+- **Cross-App Dependencies**: Prevented by strict ESLint rules and import boundaries
+- **Performance Issues**: Addressed by ISR caching and conversion-first optimization
+- **Security Vulnerabilities**: Managed through server-side validation and secret management
+
+### 8.2 Operational Risks
+- **Deployment Failures**: Mitigated by Vercel previews and CI validation
+- **Database Issues**: Managed through Prisma migrations and backup strategies
+- **Third-Party Dependencies**: Minimized by open-source only policy
+
+This document serves as the foundation for Aurora's feature-based development approach, ensuring conversion-first delivery with fresh data, strict architectural boundaries, and verifiable outcomes.

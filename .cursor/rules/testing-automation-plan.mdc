@@ -1,0 +1,310 @@
+---
+alwaysApply: true
+---
+# Testing Automation Plan - Aurora Monorepo
+
+## Overview
+This document outlines the comprehensive testing automation strategy for the Aurora monorepo, tracking progress across all packages and establishing testing standards.
+
+## Testing Strategy
+
+### Testing Framework
+- **Primary Framework**: Vitest for all packages
+- **Environment**: Node.js for server-side packages, jsdom for UI components
+- **Coverage**: Comprehensive coverage reporting with HTML/JSON output
+- **CI Integration**: Automated testing in GitHub Actions
+
+### Testing Standards
+1. **Unit Tests**: Core functionality and business logic
+2. **Integration Tests**: Package interactions and API endpoints
+3. **Mock Strategy**: Comprehensive mocking for external dependencies
+4. **TypeScript**: Full type safety in test files
+5. **Coverage Targets**: Minimum 80% coverage for critical paths
+
+## Package Testing Progress
+
+### ✅ Completed Packages
+
+#### 1. Database Package
+- **Status**: ✅ COMPLETE
+- **Test Files**: 2 (utils.test.ts, seed.test.ts)
+- **Test Count**: 28+ tests
+- **Coverage**: High coverage of utility functions
+- **Key Features**:
+  - Comprehensive Prisma mocking
+  - Global mock utility functions
+  - TypeScript global declarations
+  - Seed data validation
+- **Documentation**: [Database Testing Documentation](./database-testing-documentation.md)
+
+#### 2. UI Package
+- **Status**: ✅ COMPLETE (Previously established)
+- **Test Files**: Component tests with React Testing Library
+- **Coverage**: Component rendering and interaction tests
+- **Key Features**:
+  - shadcn/ui component testing
+  - React component mocking
+  - Accessibility testing
+
+#### 3. Core Package
+- **Status**: ✅ COMPLETE
+- **Test Files**: 3 (business.test.ts, content.test.ts, utils.test.ts)
+- **Total Tests**: 60+ passing
+- **Coverage**: High coverage for business logic, content management, and utilities
+- **Key Features Tested**:
+  - Business logic (Lead/Service/Content management)
+  - Validation schemas (Zod schema validation)
+  - Utility functions (email, phone, slug validation)
+  - Error handling (custom error classes)
+  - Input sanitization and formatting
+- **Issues Resolved**: Date mocking for consistent tests, console output suppression
+- **Documentation**: [Core Testing Documentation](./core-testing-documentation.md)
+
+### 🔄 In Progress Packages
+
+#### 4. Config Package
+- **Status**: 🔄 NEXT UP
+- **Priority**: High
+- **Scope**: Configuration management, environment variables
+- **Test Strategy**:
+  - Configuration loading tests
+  - Environment variable validation
+  - Default value testing
+  - Type safety validation
+
+### 📋 Pending Packages
+
+#### 5. Analytics Package (Next in Queue)
+- **Status**: 📋 PENDING
+- **Location**: `packages/analytics/`
+- **Priority**: Medium
+- **Estimated Effort**: Low-Medium
+- **Dependencies**: Analytics utilities, tracking functions
+- **Test Areas**: Event tracking, data collection, reporting utilities
+- **Scope**: Analytics tracking, event management
+- **Test Strategy**:
+  - Event tracking validation
+  - Analytics provider mocking
+  - Data collection tests
+  - Privacy compliance tests
+
+#### 6. Auth Package
+- **Status**: 📋 PENDING
+- **Location**: `packages/auth/`
+- **Priority**: High
+- **Estimated Effort**: Medium-High
+- **Dependencies**: NextAuth configuration, authentication utilities
+- **Test Areas**: Authentication flows, session management, authorization
+- **Scope**: Authentication, authorization, session management
+- **Test Strategy**:
+  - Authentication flow tests
+  - Authorization validation
+  - Session management tests
+  - Security scenario testing
+
+#### 7. Search Package
+- **Status**: 📋 PENDING
+- **Location**: `packages/search/`
+- **Priority**: Medium
+- **Estimated Effort**: Medium
+- **Dependencies**: Search engine integration, indexing utilities
+- **Test Areas**: Search functionality, indexing, query processing
+- **Scope**: Search functionality, indexing
+- **Test Strategy**:
+  - Search query tests
+  - Index management validation
+  - Search result formatting
+  - Performance testing
+
+## Testing Infrastructure
+
+### Vitest Configuration Template
+Standardized configuration for all packages:
+
+```typescript
+import { defineConfig } from 'vitest/config'
+import path from 'path'
+
+export default defineConfig({
+  test: {
+    environment: 'node', // or 'jsdom' for UI components
+    setupFiles: ['src/test/setup.ts'],
+    globals: true,
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/generated/',
+        'dist/',
+        '**/*.d.ts'
+      ],
+      thresholds: {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80
+        }
+      }
+    }
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
+  }
+})
+```
+
+### Package.json Scripts Template
+Standardized test scripts for all packages:
+
+```json
+{
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:types": "tsc --noEmit"
+  }
+}
+```
+
+### Test File Organization
+Standardized directory structure:
+
+```
+packages/[package-name]/src/test/
+├── setup.ts              # Global test setup
+├── types.d.ts            # TypeScript declarations (if needed)
+├── __mocks__/            # Mock implementations
+├── fixtures/             # Test data fixtures
+├── utils/                # Test utilities
+└── [feature].test.ts     # Feature-specific tests
+```
+
+## CI/CD Integration
+
+### Current Status
+- **CI Pipeline**: ⏳ PENDING UPDATE
+- **Workspace Scripts**: ⏳ PENDING
+- **Quality Gates**: ⏳ PENDING
+
+### Required CI Updates
+1. **GitHub Actions Workflow** (`.github/workflows/ci.yml`):
+   - Add test jobs for all packages
+   - Parallel test execution
+   - Coverage reporting
+   - Failure notifications
+
+2. **Workspace-level Scripts** (root `package.json`):
+   ```json
+   {
+     "scripts": {
+       "test": "pnpm -r test",
+       "test:watch": "pnpm -r test:watch",
+       "test:coverage": "pnpm -r test:coverage",
+       "test:packages": "pnpm --filter='./packages/*' test"
+     }
+   }
+   ```
+
+3. **Quality Gates**:
+   - Minimum test coverage thresholds
+   - TypeScript compilation checks
+   - Lint validation
+   - Build verification
+
+## Testing Best Practices
+
+### 1. Test Organization
+- **Descriptive Names**: Clear, descriptive test names
+- **Logical Grouping**: Related tests in describe blocks
+- **Test Isolation**: Independent, isolated tests
+- **Setup/Teardown**: Proper cleanup between tests
+
+### 2. Mock Strategy
+- **External Dependencies**: Mock all external services
+- **Database Operations**: Mock Prisma/database calls
+- **API Calls**: Mock HTTP requests
+- **File System**: Mock file operations
+
+### 3. Coverage Goals
+- **Critical Paths**: 90%+ coverage for business logic
+- **Utility Functions**: 100% coverage
+- **Error Handling**: Test all error scenarios
+- **Edge Cases**: Cover boundary conditions
+
+### 4. TypeScript Integration
+- **Type Safety**: Full TypeScript in tests
+- **Global Declarations**: Proper type declarations
+- **Mock Typing**: Strongly typed mocks
+- **Test Utilities**: Typed test helpers
+
+## Execution Timeline
+
+### Phase 1: Core Infrastructure (Current)
+- ✅ Database package testing complete
+- 🔄 Core package testing (next)
+- ⏳ CI/CD pipeline updates
+- ⏳ Workspace-level scripts
+
+### Phase 2: Authentication & Security
+- 📋 Auth package testing
+- 📋 Security scenario validation
+- 📋 Integration testing
+
+### Phase 3: Feature Packages
+- 📋 Config package testing
+- 📋 Analytics package testing
+- 📋 Search package testing
+
+### Phase 4: Integration & E2E
+- 📋 Cross-package integration tests
+- 📋 End-to-end testing setup
+- 📋 Performance testing
+
+## Success Metrics
+
+### Package-Level Metrics
+- ✅ All tests passing
+- ✅ Coverage thresholds met
+- ✅ TypeScript compilation clean
+- ✅ No lint errors
+
+### Workspace-Level Metrics
+- 📊 Overall test coverage > 80%
+- 📊 CI pipeline success rate > 95%
+- 📊 Test execution time < 5 minutes
+- 📊 Zero critical security vulnerabilities
+
+## Next Actions
+
+### Immediate (Next 1-2 sessions)
+1. **Core Package Testing**: Set up comprehensive tests for the core package
+2. **CI Pipeline Update**: Add test jobs for all packages
+3. **Workspace Scripts**: Add root-level test commands
+
+### Short Term (Next 3-5 sessions)
+1. **Auth Package Testing**: Critical for security validation
+2. **Config Package Testing**: Foundation for other packages
+3. **Integration Testing**: Cross-package interaction tests
+
+### Medium Term (Next 5-10 sessions)
+1. **Analytics & Search Testing**: Feature-specific validation
+2. **E2E Testing Setup**: Full application flow testing
+3. **Performance Testing**: Load and stress testing
+
+## Documentation References
+
+- [Database Testing Documentation](./database-testing-documentation.md)
+- [FLUX Rules](./FLUX_RULES.md) - Testing guidelines
+- [Project Overview](../docs/PROJECT_OVERVIEW.md)
+- [Development Pipeline](../docs/DEVELOPMENT_PIPELINE.md)
+
+---
+
+**Last Updated**: Current session
+**Status**: Database package complete, Core package next
+**Overall Progress**: 2/7 packages complete (29%)

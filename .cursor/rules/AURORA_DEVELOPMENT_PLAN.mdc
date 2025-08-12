@@ -1,0 +1,760 @@
+---
+alwaysApply: true
+---
+
+# Aurora Monorepo Development Plan
+
+> **Project**: Aurora - FLUX-Compliant Service Business Website & CMS Platform  
+> **Version**: 1.0  
+> **Date**: January 2025  
+> **Status**: Phase 2 - FLUX Application Development
+
+---
+
+## 1. FLUX Development Strategy Overview
+
+This plan ensures conflict-free development by establishing clear dependency chains, FLUX-compliant implementation ordering, and structured internationalization. Each phase builds upon previous foundations to prevent integration issues while maintaining fresh-by-default admin interfaces.
+
+**FLUX Core Principles:**
+- Foundation-first approach (packages → apps → features)
+- Fresh-by-default admin with tag-based cache invalidation
+- Modular i18n structure with feature-specific translation files
+- Dependency mapping to prevent circular dependencies
+- Testing checkpoints between major phases with FLUX compliance
+- RTL/LTR support from the ground up
+
+---
+
+## 2. Phase-by-Phase Implementation Plan
+
+### Phase 1: FLUX Foundation Setup (Week 1-2) ✅ COMPLETED
+
+**Status**: All packages are FLUX-compliant and building successfully
+
+- ✅ Monorepo structure with Turborepo
+- ✅ Package ecosystem (@workspace/*) with import boundaries
+- ✅ Database schema with Prisma (logical foreign keys)
+- ✅ Authentication system with NextAuth.js (JWT sessions)
+- ✅ UI component library with shadcn/ui (CLI-added only)
+- ✅ Search integration with Typesense
+- ✅ Analytics setup with Plausible
+- ✅ Docker development environment
+
+### Phase 2: Internationalization Foundation (Week 3)
+
+**Priority**: Critical foundation for all apps
+
+#### 2.1 Core i18n Package Setup
+**Dependencies**: @workspace/core, @workspace/config
+
+1. **Create @workspace/i18n package**
+   ```
+   packages/i18n/
+   ├── src/
+   │   ├── index.ts
+   │   ├── config.ts
+   │   ├── middleware.ts
+   │   └── utils.ts
+   ├── locales/
+   │   ├── en/
+   │   │   ├── common.json
+   │   │   ├── navigation.json
+   │   │   ├── forms.json
+   │   │   ├── services.json
+   │   │   ├── leadmanagement.json
+   │   │   ├── testimonials.json
+   │   │   ├── projects.json
+   │   │   ├── cms.json
+   │   │   └── errors.json
+   │   └── ar/
+   │       ├── common.json
+   │       ├── navigation.json
+   │       ├── forms.json
+   │       ├── services.json
+   │       ├── leadmanagement.json
+   │       ├── testimonials.json
+   │       ├── projects.json
+   │       ├── cms.json
+   │       └── errors.json
+   └── package.json
+   ```
+
+2. **Translation File Structure**
+   ```json
+   // en/common.json
+   {
+     "buttons": {
+       "save": "Save",
+       "cancel": "Cancel",
+       "delete": "Delete",
+       "edit": "Edit",
+       "submit": "Submit",
+       "loading": "Loading..."
+     },
+     "status": {
+       "active": "Active",
+       "inactive": "Inactive",
+       "pending": "Pending",
+       "completed": "Completed"
+     },
+     "time": {
+       "today": "Today",
+       "yesterday": "Yesterday",
+       "lastWeek": "Last Week",
+       "lastMonth": "Last Month"
+     }
+   }
+   
+   // en/leadmanagement.json
+   {
+     "title": "Lead Management",
+     "status": {
+       "new": "New Lead",
+       "contacted": "Contacted",
+       "qualified": "Qualified",
+       "converted": "Converted",
+       "lost": "Lost"
+     },
+     "priority": {
+       "high": "High Priority",
+       "medium": "Medium Priority",
+       "low": "Low Priority"
+     },
+     "actions": {
+       "assignTo": "Assign to",
+       "addNote": "Add Note",
+       "scheduleFollowUp": "Schedule Follow-up",
+       "markAsConverted": "Mark as Converted"
+     }
+   }
+   ```
+
+3. **next-intl Configuration**
+   ```typescript
+   // packages/i18n/src/config.ts
+   export const locales = ['en', 'ar'] as const;
+   export const defaultLocale = 'en' as const;
+   
+   export const i18nConfig = {
+     locales,
+     defaultLocale,
+     localePrefix: 'always',
+     pathnames: {
+       '/': '/',
+       '/services': {
+         en: '/services',
+         ar: '/خدمات'
+       },
+       '/contact': {
+         en: '/contact',
+         ar: '/اتصل-بنا'
+       }
+     }
+   } as const;
+   ```
+
+#### 2.2 RTL/LTR Styling Foundation
+**Dependencies**: @workspace/ui, @workspace/config
+
+1. **Update Tailwind Configuration**
+   ```javascript
+   // packages/config/tailwind.config.js
+   module.exports = {
+     plugins: [
+       require('@tailwindcss/typography'),
+       require('tailwindcss-rtl'),
+     ],
+     theme: {
+       extend: {
+         fontFamily: {
+           sans: ['Inter', 'system-ui', 'sans-serif'],
+           arabic: ['Noto Sans Arabic', 'system-ui', 'sans-serif'],
+         }
+       }
+     }
+   }
+   ```
+
+2. **Create RTL-aware Components**
+   ```typescript
+   // packages/ui/src/components/layout-direction.tsx
+   export const LayoutDirection = ({ children, locale }: {
+     children: React.ReactNode;
+     locale: string;
+   }) => {
+     const isRTL = locale === 'ar';
+     return (
+       <div dir={isRTL ? 'rtl' : 'ltr'} className={isRTL ? 'font-arabic' : 'font-sans'}>
+         {children}
+       </div>
+     );
+   };
+   ```
+
+**Testing Checkpoint**: Verify i18n package builds and translation loading works
+
+### Phase 3: Application Foundations (Week 4-5)
+
+**Dependencies**: Phase 2 completion, all packages functional
+
+#### 3.1 API Application Setup
+**Priority**: High (required by other apps)
+
+1. **Create FLUX-Compliant API App Structure**
+   ```
+   apps/api/
+   ├── src/
+   │   ├── app/
+   │   │   ├── api/
+   │   │   │   ├── auth/
+   │   │   │   ├── services/
+   │   │   │   ├── leads/
+   │   │   │   ├── testimonials/
+   │   │   │   ├── projects/
+   │   │   │   └── i18n/
+   │   │   ├── globals.css
+   │   │   ├── layout.tsx
+   │   │   └── page.tsx
+   │   ├── lib/
+   │   │   ├── auth.ts
+   │   │   ├── db.ts
+   │   │   ├── validations.ts
+   │   │   └── utils.ts
+   │   └── middleware.ts
+   ├── next.config.js
+   ├── package.json
+   └── tsconfig.json
+   ```
+
+2. **Implement FLUX-Compliant Core API Endpoints**
+   - Authentication endpoints (Node runtime, no-store)
+   - CRUD operations for all models (with tag revalidation)
+   - i18n content endpoints (fresh-by-default)
+   - File upload handling (Vercel Blob)
+   - Search integration (real-time indexing)
+
+3. **Add Internationalization Middleware**
+   ```typescript
+   // apps/api/src/middleware.ts
+   import { createI18nMiddleware } from '@workspace/i18n';
+   
+   export default createI18nMiddleware({
+     locales: ['en', 'ar'],
+     defaultLocale: 'en'
+   });
+   ```
+
+#### 3.2 Web Application Foundation
+**Dependencies**: API app, @workspace/i18n
+
+1. **Create Web App Structure with i18n**
+   ```
+   apps/web/
+   ├── src/
+   │   ├── app/
+   │   │   ├── [locale]/
+   │   │   │   ├── layout.tsx
+   │   │   │   ├── page.tsx
+   │   │   │   ├── services/
+   │   │   │   ├── contact/
+   │   │   │   ├── about/
+   │   │   │   └── projects/
+   │   │   ├── globals.css
+   │   │   └── not-found.tsx
+   │   ├── components/
+   │   │   ├── layout/
+   │   │   ├── forms/
+   │   │   ├── sections/
+   │   │   └── ui/
+   │   ├── lib/
+   │   └── middleware.ts
+   ├── messages/
+   │   ├── en.json
+   │   └── ar.json
+   ├── next.config.js
+   ├── package.json
+   └── tsconfig.json
+   ```
+
+2. **Configure next-intl**
+   ```typescript
+   // apps/web/next.config.js
+   const withNextIntl = require('next-intl/plugin')();
+   
+   module.exports = withNextIntl({
+     experimental: {
+       typedRoutes: true
+     }
+   });
+   ```
+
+#### 3.3 CMS Application Foundation
+**Dependencies**: API app, @workspace/i18n, @workspace/auth
+
+1. **Create CMS App Structure**
+   ```
+   apps/cms/
+   ├── src/
+   │   ├── app/
+   │   │   ├── [locale]/
+   │   │   │   ├── (auth)/
+   │   │   │   │   ├── login/
+   │   │   │   │   └── layout.tsx
+   │   │   │   ├── (dashboard)/
+   │   │   │   │   ├── dashboard/
+   │   │   │   │   ├── services/
+   │   │   │   │   ├── leads/
+   │   │   │   │   ├── content/
+   │   │   │   │   ├── users/
+   │   │   │   │   └── layout.tsx
+   │   │   │   ├── layout.tsx
+   │   │   │   └── page.tsx
+   │   │   ├── api/
+   │   │   ├── globals.css
+   │   │   └── not-found.tsx
+   │   ├── components/
+   │   ├── lib/
+   │   └── middleware.ts
+   ├── messages/
+   ├── next.config.js
+   ├── package.json
+   └── tsconfig.json
+   ```
+
+**Testing Checkpoint**: Verify all apps start, i18n routing works, basic authentication flows
+
+### Phase 4: Core Feature Implementation (Week 6-7)
+
+**Dependencies**: Phase 3 completion, all app foundations ready
+
+#### 4.1 Service Management System
+**Implementation Order**: Database → API → CMS → Web
+
+1. **Database Layer** (Already completed in Phase 1)
+   - Service model with translations
+   - ServiceTranslation model
+
+2. **FLUX-Compliant API Layer**
+   ```typescript
+   // apps/api/src/app/api/services/route.ts
+   export const runtime = 'node';
+   export const dynamic = 'force-dynamic';
+   
+   export async function GET(request: Request) {
+     const { searchParams } = new URL(request.url);
+     const locale = searchParams.get('locale') || 'en';
+     
+     const services = await db.service.findMany({
+       include: {
+         translations: {
+           where: { locale }
+         }
+       }
+     });
+     
+     return Response.json(services, {
+       headers: { 'Cache-Control': 'no-store' }
+     });
+   }
+   ```
+
+3. **CMS Interface**
+   - Service creation/editing forms
+   - Translation management interface
+   - Media upload for service images
+   - SEO optimization tools
+
+4. **Web Interface**
+   - Service showcase pages
+   - Service detail pages
+   - Service category filtering
+   - Responsive design with RTL support
+
+#### 4.2 Lead Management System
+**Implementation Order**: Database → API → Forms → CMS Dashboard
+
+1. **FLUX-Compliant API Endpoints**
+   ```typescript
+   // apps/api/src/app/api/leads/route.ts
+   export const runtime = 'node';
+   export const dynamic = 'force-dynamic';
+   
+   export async function POST(request: Request) {
+     const data = await request.json();
+     const validatedData = leadSchema.parse(data);
+     
+     const lead = await db.lead.create({
+       data: validatedData
+     });
+     
+     // Send notification email
+     await sendLeadNotification(lead);
+     
+     // Trigger fresh data in CMS
+     revalidateTag('content:leads');
+     
+     return Response.json(lead, {
+       headers: { 'Cache-Control': 'no-store' }
+     });
+   }
+   ```
+
+2. **Web Forms**
+   - Contact forms with validation
+   - Service-specific quote requests
+   - Emergency service forms
+   - reCAPTCHA integration
+
+3. **CMS Dashboard**
+   - Lead pipeline visualization
+   - Lead assignment system
+   - Activity tracking
+   - Follow-up scheduling
+
+#### 4.3 Content Management System
+**Implementation Order**: Rich Editor → Media Management → SEO Tools
+
+1. **Rich Text Editor**
+   - Tiptap integration with RTL support
+   - Arabic text handling
+   - Image insertion and management
+   - Link management
+
+2. **Media Management**
+   - File upload with validation
+   - Image optimization
+   - Gallery management
+   - CDN integration preparation
+
+3. **SEO Tools**
+   - Meta tag management
+   - Sitemap generation
+   - Schema markup
+   - Multilingual SEO optimization
+
+**FLUX Testing Checkpoint**: End-to-end feature testing, form submissions, content creation, fresh data validation
+
+### Phase 5: Advanced Features (Week 8-9)
+
+**Dependencies**: Phase 4 completion, core features functional
+
+#### 5.1 Search Integration
+**Implementation Order**: Typesense Setup → Indexing → Search UI
+
+1. **Typesense Configuration**
+   ```typescript
+   // packages/search/src/config.ts
+   export const searchConfig = {
+     indexes: {
+       services: {
+         searchableAttributes: ['title', 'description', 'content'],
+         filterableAttributes: ['category', 'locale', 'status'],
+         sortableAttributes: ['createdAt', 'updatedAt'],
+         rankingRules: [
+           'words',
+           'typo',
+           'proximity',
+           'attribute',
+           'sort',
+           'exactness'
+         ]
+       }
+     },
+     locales: {
+       ar: {
+         stopWords: ['في', 'من', 'إلى', 'على', 'عن'],
+         synonyms: {
+           'تكييف': ['مكيف', 'تبريد'],
+           'صيانة': ['إصلاح', 'خدمة']
+         }
+       }
+     }
+   };
+   ```
+
+2. **Search UI Components**
+   - Search input with autocomplete
+   - Filter panels
+   - Result display with highlighting
+   - Pagination
+
+#### 5.2 Analytics Integration
+**Implementation Order**: Plausible Setup → Event Tracking → Dashboard
+
+1. **Event Tracking**
+   ```typescript
+   // packages/analytics/src/events.ts
+   export const trackLeadSubmission = (data: {
+     serviceType: string;
+     locale: string;
+     source: string;
+   }) => {
+     plausible('Lead Submitted', {
+       props: data
+     });
+   };
+   ```
+
+2. **Analytics Dashboard**
+   - Lead conversion metrics
+   - Page performance tracking
+   - User journey analysis
+   - A/B testing setup
+
+#### 5.3 Email System
+**Implementation Order**: Templates → Sending → Automation
+
+1. **Email Templates**
+   - Lead notification emails
+   - Welcome emails
+   - Follow-up sequences
+   - Multilingual templates
+
+2. **Email Automation**
+   - Lead assignment notifications
+   - Follow-up reminders
+   - Customer communication
+
+**FLUX Testing Checkpoint**: Search functionality, analytics tracking, email delivery, cache invalidation
+
+### Phase 6: Polish & Optimization (Week 10-11)
+
+**Dependencies**: Phase 5 completion, all features implemented
+
+#### 6.1 Performance Optimization
+1. **Image Optimization**
+   - Next.js Image component implementation
+   - WebP conversion
+   - Lazy loading
+   - Responsive images
+
+2. **Code Splitting**
+   - Route-based splitting
+   - Component lazy loading
+   - Bundle analysis
+   - Tree shaking optimization
+
+3. **Caching Strategy**
+   - Redis implementation
+   - API response caching
+   - Static page caching
+   - CDN preparation
+
+#### 6.2 Security Hardening
+1. **Input Validation**
+   - Zod schema validation
+   - XSS prevention
+   - SQL injection protection
+   - File upload security
+
+2. **Authentication Security**
+   - Rate limiting
+   - CSRF protection
+   - Session security
+   - Password policies
+
+#### 6.3 Testing & Quality Assurance
+1. **Unit Testing**
+   - Component testing
+   - API endpoint testing
+   - Utility function testing
+   - i18n testing
+
+2. **Integration Testing**
+   - End-to-end workflows
+   - Cross-browser testing
+   - Mobile responsiveness
+   - RTL layout testing
+
+3. **Performance Testing**
+   - Load testing
+   - Core Web Vitals
+   - Lighthouse audits
+   - Accessibility testing
+
+**Final FLUX Testing Checkpoint**: Complete system testing, performance validation, security audit, fresh data compliance
+
+---
+
+## 3. Dependency Mapping
+
+### Critical Path Dependencies
+```mermaid
+graph TD
+    A[Packages Foundation] --> B[i18n Package]
+    B --> C[API App]
+    C --> D[Web App]
+    C --> E[CMS App]
+    D --> F[Service Features]
+    E --> F
+    F --> G[Lead Management]
+    G --> H[Search Integration]
+    H --> I[Analytics]
+    I --> J[Optimization]
+```
+
+### Package Dependencies
+- **@workspace/i18n**: Depends on @workspace/core, @workspace/config
+- **@workspace/ui**: Independent, can be developed in parallel
+- **@workspace/auth**: Depends on @workspace/database
+- **@workspace/search**: Depends on @workspace/database
+- **@workspace/analytics**: Independent wrapper
+
+### App Dependencies
+- **API App**: Depends on all packages
+- **Web App**: Depends on API app, @workspace/i18n
+- **CMS App**: Depends on API app, @workspace/auth, @workspace/i18n
+
+---
+
+## 4. Translation File Organization
+
+### Module-Based Structure
+```
+locales/
+├── en/
+│   ├── common.json          # Shared UI elements, buttons, status
+│   ├── navigation.json      # Menu items, breadcrumbs, links
+│   ├── forms.json          # Form labels, validation messages
+│   ├── services.json       # Service-related content
+│   ├── leadmanagement.json # Lead pipeline, status, actions
+│   ├── testimonials.json   # Customer testimonials, ratings
+│   ├── projects.json       # Project showcase, case studies
+│   ├── cms.json           # CMS-specific interface
+│   └── errors.json        # Error messages, notifications
+└── ar/
+    ├── common.json
+    ├── navigation.json
+    ├── forms.json
+    ├── services.json
+    ├── leadmanagement.json
+    ├── testimonials.json
+    ├── projects.json
+    ├── cms.json
+    └── errors.json
+```
+
+### Translation Loading Strategy
+```typescript
+// Namespace-based loading
+import { useTranslations } from 'next-intl';
+
+const LeadManagement = () => {
+  const t = useTranslations('leadmanagement');
+  const common = useTranslations('common');
+  
+  return (
+    <div>
+      <h1>{t('title')}</h1>
+      <button>{common('buttons.save')}</button>
+    </div>
+  );
+};
+```
+
+---
+
+## 5. Quality Gates & Checkpoints
+
+### Phase Completion Criteria
+
+#### Phase 2 (i18n Foundation)
+- [ ] All translation files created and populated
+- [ ] next-intl configuration working
+- [ ] RTL/LTR switching functional
+- [ ] Arabic fonts loading correctly
+- [ ] Build process includes all locales
+
+#### Phase 3 (App Foundations)
+- [ ] All apps start without errors
+- [ ] Routing works for both locales
+- [ ] Authentication flows functional
+- [ ] Database connections established
+- [ ] Basic API endpoints responding
+
+#### Phase 4 (Core Features)
+- [ ] Service CRUD operations working
+- [ ] Lead forms submitting successfully
+- [ ] Content creation/editing functional
+- [ ] Multilingual content saving correctly
+- [ ] File uploads working
+
+#### Phase 5 (Advanced Features)
+- [ ] Search returning relevant results
+- [ ] Analytics events tracking
+- [ ] Email notifications sending
+- [ ] Performance metrics acceptable
+- [ ] Security measures implemented
+
+#### Phase 6 (Polish)
+- [ ] All tests passing
+- [ ] Performance benchmarks met
+- [ ] Accessibility standards met
+- [ ] Cross-browser compatibility verified
+- [ ] Mobile responsiveness confirmed
+
+### Continuous Integration Checks
+- TypeScript compilation
+- ESLint/Prettier formatting
+- Unit test coverage > 80%
+- Build size monitoring
+- Performance regression detection
+
+---
+
+## 6. Risk Mitigation
+
+### Potential Conflicts & Solutions
+
+1. **i18n Route Conflicts**
+   - **Risk**: URL conflicts between locales
+   - **Solution**: Use pathnames configuration in next-intl
+   - **Prevention**: Define all routes in advance
+
+2. **Package Circular Dependencies**
+   - **Risk**: Packages depending on each other
+   - **Solution**: Strict dependency hierarchy
+   - **Prevention**: Regular dependency audits
+
+3. **Database Migration Conflicts**
+   - **Risk**: Schema changes breaking existing data
+   - **Solution**: Incremental migrations with rollback plans
+   - **Prevention**: Migration testing in staging
+
+4. **RTL Layout Issues**
+   - **Risk**: Components breaking in RTL mode
+   - **Solution**: RTL testing for all components
+   - **Prevention**: RTL-first development approach
+
+### Rollback Strategies
+- Feature flags for new functionality
+- Database migration rollback scripts
+- Component version pinning
+- Staged deployment process
+
+---
+
+## 7. Success Metrics
+
+### Technical Metrics
+- Build time < 2 minutes
+- Test coverage > 80%
+- Bundle size < 500KB (gzipped)
+- Page load time < 2 seconds
+- Core Web Vitals score > 90
+
+### Functional Metrics
+- All user stories implemented
+- Zero critical bugs
+- Cross-browser compatibility
+- Mobile responsiveness
+- Accessibility compliance (WCAG 2.1 AA)
+
+### Business Metrics
+- Lead form conversion rate
+- Page engagement metrics
+- Search functionality usage
+- Content management efficiency
+- User satisfaction scores
+
+This development plan ensures systematic, conflict-free implementation of the Aurora monorepo with comprehensive multilingual support and proper dependency management.

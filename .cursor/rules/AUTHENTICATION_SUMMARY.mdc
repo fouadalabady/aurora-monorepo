@@ -1,0 +1,294 @@
+---
+alwaysApply: true
+---
+# Authentication & User Management Summary
+
+> Complete overview of authentication and user management documentation across the Aurora project.
+
+## Documentation Structure
+
+The Aurora project's authentication and user management system is documented across two main directories:
+
+### New Documentation (`docs/new docs/`)
+- **AUTHENTICATION_GUIDE.md** - Comprehensive technical implementation guide
+- **USER_MANAGEMENT_GUIDE.md** - Detailed user creation and management workflows
+- **CMS_APP_REQUIREMENTS.md** - CMS-specific authentication requirements
+- **API_APP_REQUIREMENTS.md** - API authentication and security specifications
+- **DATABASE_PRISMA.md** - Database schema and user model definitions
+- **FEATURE_EXECUTION_PLAN.md** - F2 Auth & RBAC implementation plan
+
+### Legacy Documentation (`.trae/documents/`)
+- **CMS_APP_REQUIREMENTS.md** - Enhanced with FLUX-compliant authentication
+- **API_APP_REQUIREMENTS.md** - Updated with comprehensive API security
+- **DEVELOPMENT_PIPELINE.md** - Authentication flow diagrams and implementation steps
+- **AURORA_PROJECT_REQUIREMENTS.md** - High-level authentication overview
+- **WEB_APP_REQUIREMENTS.md** - Public-facing authentication features
+
+## Core Authentication System
+
+### Technology Stack
+- **NextAuth.js** with JWT strategy
+- **Prisma** with PostgreSQL for user data
+- **bcrypt** for password hashing (12 salt rounds)
+- **Zod** for input validation
+- **Middleware** for route protection
+
+### User Roles & Permissions
+
+| Role | Access Level | Key Permissions |
+|------|-------------|----------------|
+| **Admin** | Full System | User management, system settings, all content operations |
+| **Editor** | Content Management | Create/edit/delete content, manage leads, view analytics |
+| **Agent** | Lead Management | View/update leads, limited content access |
+| **Viewer** | Read-Only | View content and leads only |
+
+### FLUX Compliance Features
+
+#### Fresh-by-Default Implementation
+- **CMS Pages**: `export const revalidate = 0` for all admin interfaces
+- **API Calls**: `{ cache: 'no-store' }` for authentication data
+- **Session Validation**: Real-time JWT verification
+- **User Data**: No stale user information in admin interfaces
+
+#### Security Implementation
+- **Node Runtime**: All API routes use `export const runtime = 'node'`
+- **Import Boundaries**: Strict `@workspace/*` alias usage
+- **Error Contracts**: Uniform error responses across all endpoints
+- **CSRF Protection**: Built-in NextAuth CSRF handling
+
+## Key Implementation Files
+
+### Authentication Configuration
+```typescript
+// packages/auth/src/config.ts
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  providers: [CredentialsProvider],
+  session: { strategy: 'jwt', maxAge: 24 * 60 * 60 },
+  callbacks: {
+    jwt: async ({ token, user }) => {
+      if (user) token.role = user.role
+      return token
+    },
+    session: async ({ session, token }) => {
+      session.user.role = token.role
+      return session
+    }
+  }
+}
+```
+
+### User Model (Prisma)
+```prisma
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      UserRole @default(VIEWER)
+  password  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  AGENT
+  VIEWER
+}
+```
+
+### Middleware Protection
+```typescript
+// apps/cms/middleware.ts
+export async function middleware(request: NextRequest) {
+  const token = await getToken({ req: request })
+  
+  if (!token) {
+    return NextResponse.redirect(new URL('/auth/signin', request.url))
+  }
+  
+  // Role-based route protection
+  const { pathname } = request.nextUrl
+  if (pathname.startsWith('/admin/users') && token.role !== 'ADMIN') {
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url))
+  }
+  
+  return NextResponse.next()
+}
+```
+
+## Authentication Flows
+
+### Login Process
+1. User accesses protected route
+2. Middleware redirects to `/auth/signin`
+3. User submits credentials
+4. NextAuth validates against database
+5. JWT token generated and stored
+6. User redirected to intended destination
+
+### User Creation Process
+1. Admin accesses user management
+2. Fills user creation form
+3. System validates input with Zod
+4. Password hashed with bcrypt
+5. User record created in database
+6. Welcome email sent (optional)
+7. Cache invalidated with `revalidateTag('content:users')`
+
+### Role-Based Access
+1. User attempts to access protected resource
+2. Middleware extracts JWT token
+3. Role validation against route requirements
+4. Access granted or denied based on permissions
+5. Fresh data fetched with `cache: 'no-store'`
+
+## API Endpoints
+
+### Authentication Endpoints
+- `POST /api/auth/[...nextauth]` - NextAuth handler
+- `POST /api/auth/reset-password` - Password reset initiation
+- `POST /api/auth/change-password` - Password change
+- `GET /api/auth/session` - Current session info
+
+### User Management Endpoints
+- `GET /api/admin/users` - List all users (Admin only)
+- `POST /api/admin/users` - Create new user (Admin only)
+- `PATCH /api/admin/users/[id]` - Update user (Admin only)
+- `DELETE /api/admin/users/[id]` - Deactivate user (Admin only)
+- `PATCH /api/admin/users/[id]/role` - Change user role (Admin only)
+
+## Security Features
+
+### Password Security
+- Minimum 8 characters with complexity requirements
+- bcrypt hashing with 12 salt rounds
+- Secure password generation for admin-created accounts
+- Password history prevention (optional)
+
+### Session Security
+- JWT tokens with 24-hour expiration
+- Secure cookies (httpOnly, secure, sameSite)
+- Session invalidation on role changes
+- CSRF protection via NextAuth
+
+### Data Protection
+- Input validation with Zod schemas
+- SQL injection prevention via Prisma
+- XSS protection in forms
+- Rate limiting on authentication endpoints
+
+## Testing Coverage
+
+### Unit Tests
+- User creation and validation
+- Password hashing and verification
+- Role-based access control
+- JWT token generation and validation
+
+### E2E Tests
+- Complete login flow
+- User creation by admin
+- Role-based route protection
+- Password reset workflow
+
+### Security Tests
+- Authentication bypass attempts
+- Role escalation prevention
+- Session hijacking protection
+- Input validation edge cases
+
+## Deployment Considerations
+
+### Environment Variables
+```bash
+# Authentication
+NEXTAUTH_URL=https://aurora.com
+NEXTAUTH_SECRET=your-secret-key
+
+# Database
+DATABASE_URL=postgresql://...
+
+# Email (for password reset)
+SMTP_HOST=smtp.example.com
+SMTP_USER=noreply@aurora.com
+SMTP_PASS=your-smtp-password
+```
+
+### Database Migrations
+```bash
+# Apply authentication schema
+pnpm prisma migrate deploy
+
+# Seed initial admin user
+pnpm prisma db seed
+```
+
+### Vercel Configuration
+```json
+{
+  "functions": {
+    "apps/api/app/api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Monitoring & Maintenance
+
+### User Activity Logging
+- Login/logout events
+- Role changes
+- Password resets
+- Failed authentication attempts
+
+### Performance Monitoring
+- Authentication response times
+- Database query performance
+- Session validation overhead
+- Cache hit/miss rates
+
+### Security Monitoring
+- Failed login attempts
+- Suspicious activity patterns
+- Token expiration rates
+- Role escalation attempts
+
+## Future Enhancements
+
+### Planned Features
+- Two-factor authentication (2FA)
+- Single sign-on (SSO) integration
+- Advanced audit logging
+- User session management dashboard
+
+### Scalability Considerations
+- Redis session storage
+- Database connection pooling
+- JWT token refresh mechanism
+- Multi-tenant user isolation
+
+## Documentation Maintenance
+
+This summary document should be updated whenever:
+- New authentication features are added
+- User roles or permissions change
+- Security policies are updated
+- API endpoints are modified
+- Database schema changes affect user management
+
+For detailed implementation guidance, refer to the specific documents in both the `docs/new docs/` and `.trae/documents/` directories.

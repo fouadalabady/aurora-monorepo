@@ -1,0 +1,247 @@
+---
+alwaysApply: true
+---
+# Aurora Development Pipeline (Feature-Based Execution)
+
+## 1. Product Overview
+Aurora is a conversion-first business website platform built as a monorepo with three applications: public website (web), content management system (cms), and API backend (api). The platform prioritizes RFQ/Contact flows, page speed, and fresh data delivery with no analytics dependencies.
+
+## 2. Core Features
+
+### 2.1 Feature Execution Model
+Development follows a feature-based execution loop with deterministic steps and verifiable outcomes:
+
+**Plan → Implement → Test → Deploy → Verify**
+
+### 2.2 Feature Modules
+Our development consists of 8 core features executed sequentially:
+
+1. **F1 - Monorepo Bootstrap**: workspace setup, tooling, and build configuration
+2. **F2 - Auth & RBAC**: NextAuth integration with role-based access control
+
+**Authentication Implementation with NextAuth.js and JWT Strategy**
+
+### Implementation Steps:
+1. **NextAuth Configuration**:
+   - Install NextAuth.js with credentials provider
+   - Configure JWT strategy with 30-day expiration
+   - Set up Prisma adapter for user persistence
+   - Implement bcrypt password hashing (12 salt rounds)
+
+2. **Database Schema**:
+   - Create User model with role enum (ADMIN, EDITOR, AGENT, VIEWER)
+   - Add password field with bcrypt hashing
+   - Set up unique email constraint
+   - Configure user-lead relationships
+
+3. **Security Implementation**:
+   - Implement role-based middleware for `/admin/*` routes
+   - Add JWT token validation and role injection
+   - Set up CSRF protection and session timeout
+   - Create secure password requirements validation
+
+4. **User Management**:
+   - Seed admin user via `pnpm ts-node packages/database/seed.ts`
+   - Build admin user creation interface
+   - Implement role assignment and user deactivation
+   - Add password reset workflow with email verification
+
+5. **Fresh-by-Default Implementation**:
+   - Ensure all auth-related server components use `revalidate = 0`
+   - Implement `{ cache: 'no-store' }` for user data fetches
+   - Add real-time session validation
+
+**Done when:** 
+- Login/logout works with JWT sessions
+- Role-protected pages render correctly for each user type
+- Admin can create/manage users with proper role assignment
+- All authentication data is fresh-by-default (no stale sessions)
+- Password security requirements are enforced
+- Middleware properly protects routes based on user roles
+3. **F3 - Leads Capture**: REST/GraphQL endpoints with CAPTCHA and email notifications
+4. **F4 - CMS Leads Module**: admin interface for lead management with fresh data
+5. **F5 - Content Management**: Prisma models with ISR and tag-based revalidation
+6. **F6 - i18n & RTL**: Arabic/English localization with RTL layout support
+7. **F7 - Performance & SEO**: metadata optimization and caching strategy (no analytics)
+8. **F8 - QA & Hardening**: comprehensive testing and error handling
+
+### 2.3 Feature Details
+
+| Feature | Module | Implementation Requirements |
+|---------|--------|----------------------------|
+| F1 Bootstrap | Workspace Setup | Create apps/packages structure, configure TS paths, ESLint, Tailwind, shadcn/ui, Prisma |
+| F2 Auth | NextAuth Integration | Credentials/email provider, Prisma adapter, middleware guards, admin seeding |
+| F3 Leads API | Capture Endpoints | REST POST /api/leads/capture, GraphQL mutation, Zod validation, CAPTCHA, SMTP |
+| F4 CMS Leads | Admin Interface | DataTable with filters/pagination, details view, status management, no-store fetches |
+| F5 Content | CMS & Web Pages | Prisma models for Services/Posts, CRUD endpoints, ISR with tag revalidation |
+| F6 Localization | i18n & RTL | Locale middleware, ar/en resources, RTL helpers in packages/ui |
+| F7 Performance | SEO & Caching | Metadata API, JSON-LD, font/image optimization, cache headers |
+| F8 Testing | QA & Hardening | Vitest unit tests, Playwright E2E, API contracts, error boundaries |
+
+## 3. Core Process
+
+### 3.1 Feature Execution Loop
+Each feature follows this mandatory process:
+
+1. **Plan**: Create feature brief in `docs/feature-<slug>.md` with problem, outcome, surfaces, data, API, freshness, and acceptance criteria
+2. **Implement**: Apply changes in order - Database (Prisma) → API (REST+GraphQL) → CMS → Web
+3. **Test**: Unit tests (Vitest), E2E (Playwright), contract validation
+4. **Deploy**: Vercel previews, CI validation, production deployment
+5. **Verify**: Acceptance criteria validation, performance checks
+
+### 3.2 FLUX-Compliant Development Flow
+
+```mermaid
+graph TD
+    A[F1: Monorepo Bootstrap] --> B[F2: Auth & RBAC]
+    B --> C[F3: Leads Capture]
+    C --> D[F4: CMS Leads Module]
+    D --> E[F5: Content Management]
+    E --> F[F6: i18n & RTL]
+    F --> G[F7: Performance & SEO]
+    G --> H[F8: QA & Hardening]
+    
+    subgraph "Fresh-by-Default Guardrails"
+        I[revalidate = 0]
+        J[Cache: no-store]
+        K[revalidateTag]
+    end
+    
+    subgraph "FLUX Compliance"
+        L[Node Runtime]
+        M[Import Boundaries]
+        N[shadcn/ui CLI]
+    end
+```
+
+### 3.3 Authentication Flow (F2 Implementation)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant C as CMS App
+    participant M as Middleware
+    participant N as NextAuth
+    participant A as API
+    participant D as Database
+    
+    Note over U,D: Login Flow
+    U->>C: Access /admin/dashboard
+    C->>M: Route protection check
+    M->>N: Validate session
+    N->>C: Redirect to /auth/signin
+    C->>U: Show login form
+    
+    U->>C: Submit credentials
+    C->>N: signIn(credentials)
+    N->>A: POST /api/auth/[...nextauth]
+    A->>D: Find user by email
+    D->>A: Return user data
+    A->>A: Verify bcrypt password
+    A->>N: Generate JWT token
+    N->>C: Set session cookie
+    C->>U: Redirect to dashboard
+    
+    Note over U,D: Protected Route Access
+    U->>C: Access /admin/users
+    C->>M: Check route permissions
+    M->>N: Validate JWT token
+    N->>M: Return user role
+    M->>M: Verify ADMIN role
+    M->>C: Allow access
+    C->>A: GET /api/admin/users (fresh data)
+    A->>A: Validate session & role
+    A->>D: Query users with no-store
+    D->>A: Return fresh user data
+    A->>C: JSON response
+    C->>U: Render user management page
+    
+    Note over U,D: User Creation Flow
+    U->>C: Create new user form
+    C->>A: POST /api/admin/users
+    A->>A: Validate admin session
+    A->>A: Hash password with bcrypt
+    A->>D: Create user record
+    D->>A: Return created user
+    A->>C: Success response
+    C->>U: Show success message
+```
+
+## 4. User Interface Design
+
+### 4.1 Design Style
+- **Primary Colors**: Conversion-focused palette with strong CTAs
+- **Component System**: shadcn/ui components added via CLI only
+- **Typography**: Optimized fonts with proper loading strategies
+- **Layout**: Mobile-first responsive design with sticky CTAs
+- **RTL Support**: Logical CSS properties via Tailwind RTL plugin
+
+### 4.2 Technical UI Requirements
+
+| Application | UI Framework | Caching Strategy |
+|-------------|--------------|------------------|
+| Web (Public) | Next.js 14+ App Router | ISR with tag revalidation |
+| CMS (Admin) | Next.js 14+ App Router | revalidate = 0, no-store fetches |
+| API (Backend) | REST + GraphQL | Cache-Control: no-store |
+
+### 4.3 Responsiveness
+Mobile-first responsive design with touch optimization. Primary focus on conversion flows and RFQ/Contact forms across all devices.
+
+## 5. Technical Architecture
+
+### 5.1 Stack Requirements
+- **Frontend**: Next.js 14+, TypeScript, Tailwind, shadcn/ui
+- **Backend**: Prisma, PostgreSQL, NextAuth, Zod, React Hook Form
+- **API**: GraphQL Yoga/Helix, REST endpoints
+- **Deployment**: Vercel (3 projects), Node runtime for API
+
+### 5.2 Import & Scoping Standards
+- **Aliases**: `@workspace/*` (packages), `@web/*`, `@cms/*`, `@api/*` (apps)
+- **Forbidden**: Direct imports from other app's `src/*`
+- **shadcn/ui**: CLI-only installation, centralized in `packages/ui`
+- **ESLint**: Enforced no-restricted-imports rules
+
+### 5.3 Caching & Freshness Policy
+- **CMS**: `revalidate = 0`, `unstable_noStore()`, `fetch({ cache: 'no-store' })`
+- **API**: `Cache-Control: no-store`, `dynamic = 'force-dynamic'`
+- **Web**: ISR with tags, `revalidateTag('content:<model>')` after mutations
+
+### 5.4 Security & Validation
+- **Forms**: Server-side reCAPTCHA + Zod validation
+- **Auth**: NextAuth JWT/session, role checks in API
+- **Secrets**: Environment variables only, never client-exposed
+- **Error Contract**: Uniform `{ code, message, details? }` format
+
+## 6. Quality Gates
+
+### 6.1 CI Requirements
+- `typecheck`, `lint`, `build` for each app
+- Unit tests (Vitest) with mocked Prisma
+- Playwright smoke tests (forms, navigation, auth)
+- Bundle size monitoring
+- No cross-app import violations
+
+### 6.2 Definition of Done
+Each feature is complete when:
+- All acceptance criteria are verified
+- No cross-app imports exist
+- shadcn/ui usage follows CLI-only pattern
+- Admin/CMS shows fresh data (no stale content)
+- Public pages revalidate within 30 seconds of CMS mutations
+- CI passes all quality gates
+
+## 7. Deployment Strategy
+
+### 7.1 Vercel Configuration
+- **3 Projects**: `web`, `cms`, `api`
+- **Runtime**: Node.js for API (Prisma requirement)
+- **Database**: Managed PostgreSQL
+- **Migrations**: `pnpm prisma migrate deploy` in production
+
+### 7.2 Environment Variables
+- `DATABASE_URL`, `DIRECT_URL` (api, cms)
+- `NEXTAUTH_URL`, `NEXTAUTH_SECRET` (cms)
+- `RECAPTCHA_SITE_KEY` (web), `RECAPTCHA_SECRET_KEY` (api)
+- `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` (api)
+
+This development pipeline ensures conversion-first delivery with fresh data, strict architectural boundaries, and verifiable feature outcomes.

@@ -1,0 +1,331 @@
+---
+alwaysApply: true
+---
+# Web App Requirements (Conversion-First Public Website)
+
+## 1. Product Overview
+The Aurora Web App is a conversion-first public website designed to maximize RFQ/Contact flows and lead generation. Built with Next.js 14+ App Router, the platform delivers optimized performance, multilingual support (Arabic/English), and fresh content through ISR with tag-based revalidation.
+
+## 2. Core Features
+
+### 2.1 User Roles
+| Role | Access Method | Core Permissions |
+|------|---------------|------------------|
+| Visitor | Public access | Browse content, submit contact forms, request quotes |
+| Prospect | Form submission | Receive follow-up communications, access quote status |
+
+### 2.2 Feature Module
+The web application implements conversion-focused features across multiple touchpoints:
+
+1. **Homepage**: Hero section with primary CTA, services showcase, testimonials carousel
+2. **Services Pages**: Dynamic service listings with detailed descriptions and quote requests
+3. **About Page**: Company information with trust indicators and team showcase
+4. **Blog**: SEO-optimized content with multilingual support and social sharing
+5. **Contact/RFQ**: Primary conversion forms with CAPTCHA protection and validation
+6. **Search**: Multilingual content search with Arabic/English support
+
+### 2.3 Page Details
+
+| Page Name | Module Name | Feature Description |
+|-----------|-------------|--------------------|
+| Homepage | Hero Section | Full-width banner with primary value proposition, animated CTA buttons, conversion-focused messaging |
+| Homepage | Services Grid | Dynamic service cards with hover effects, "Get Quote" CTAs, responsive grid layout |
+| Homepage | Testimonials | Customer testimonials carousel with ratings, photos, auto-play functionality |
+| Homepage | Trust Indicators | Company certifications, years of experience, customer count, service areas |
+| Services | Service Listings | Paginated service cards with filtering, search, category navigation |
+| Services | Service Details | Individual service pages with descriptions, pricing guides, quote request forms |
+| About | Company Story | Mission, vision, values with engaging visuals and team photos |
+| About | Team Showcase | Team member profiles with expertise areas and contact information |
+| Blog | Post Listings | SEO-optimized blog posts with categories, tags, search functionality |
+| Blog | Post Details | Individual blog posts with social sharing, related posts, comment system |
+| Contact | Contact Form | Multi-step contact form with service selection, project details, CAPTCHA |
+| Contact | RFQ Form | Request for Quote form with file uploads, project specifications, timeline |
+| Search | Search Results | Multilingual search results with filtering, sorting, pagination |
+| Legal | Privacy Policy | GDPR-compliant privacy policy with cookie consent management |
+| Legal | Terms of Service | Terms and conditions with clear service agreements |
+
+## 3. Core Process
+
+### 3.1 Conversion Funnel
+The primary user journey focuses on lead generation and conversion:
+
+1. **Discovery**: Visitor lands on homepage through SEO, ads, or referrals
+2. **Engagement**: Browse services, read testimonials, explore company information
+3. **Interest**: View specific service details, read relevant blog content
+4. **Action**: Submit contact form or request quote with project details
+5. **Follow-up**: Receive confirmation email and enter lead management system
+
+### 3.2 User Flow Diagram
+```mermaid
+graph TD
+    A[Visitor Lands] --> B{Homepage}
+    B --> C[Browse Services]
+    B --> D[Read About Us]
+    B --> E[View Blog]
+    
+    C --> F[Service Details]
+    F --> G[Request Quote]
+    
+    D --> H[Contact Form]
+    E --> I[Related Services]
+    I --> F
+    
+    G --> J[Lead Captured]
+    H --> J
+    J --> K[Email Confirmation]
+    K --> L[CMS Lead Management]
+```
+
+## 4. User Interface Design
+
+### 4.1 Design Style
+- **Primary Colors**: Conversion-optimized blue (#3B82F6) with high-contrast CTAs
+- **Secondary Colors**: Trust-building green (#10B981), attention-grabbing orange (#F59E0B)
+- **Button Style**: shadcn/ui components with rounded corners, gradient backgrounds, hover animations
+- **Typography**: Inter font family with optimized loading, clear hierarchy (16px base, 24px/32px/48px headings)
+- **Layout Style**: Mobile-first responsive design with sticky navigation and floating CTAs
+- **Icon Style**: Lucide React icons with consistent 24px sizing, RTL-compatible positioning
+
+### 4.2 Page Design Overview
+
+| Page Name | Module Name | UI Elements |
+|-----------|-------------|-------------|
+| Homepage | Hero Section | Full-width gradient background, animated headline, primary CTA button, hero image/video |
+| Homepage | Services Grid | Card-based layout with hover effects, service icons, "Learn More" and "Get Quote" buttons |
+| Homepage | Testimonials | Carousel with customer photos, star ratings, auto-play controls, navigation dots |
+| Services | Service Cards | Grid layout with service images, pricing indicators, feature lists, comparison tables |
+| Contact | Multi-step Form | Progress indicator, field validation, file upload areas, CAPTCHA integration |
+| Blog | Post Grid | Featured image, excerpt, read time, category tags, author information |
+
+### 4.3 Responsiveness
+Mobile-first responsive design with breakpoints at 640px, 768px, 1024px, and 1280px. Touch-optimized interactions for mobile devices. RTL layout support for Arabic content using Tailwind RTL plugin with logical CSS properties.
+
+## 5. Technical Architecture
+
+### 5.1 Technology Stack
+- **Framework**: Next.js 14+ with App Router and Server Components
+- **Language**: TypeScript 5 with strict mode configuration
+- **Styling**: Tailwind CSS with custom design system and RTL support
+- **Components**: shadcn/ui components installed via CLI only
+- **Forms**: React Hook Form with Zod validation
+- **Internationalization**: next-intl for Arabic/English support
+- **SEO**: Next.js Metadata API with JSON-LD structured data
+
+### 5.2 Import & Scoping Standards
+
+**Allowed Import Patterns:**
+- Shared packages: `@workspace/ui`, `@workspace/core`, `@workspace/config`
+- App-local imports: `@web/*` for internal web app modules
+- External packages: Standard npm packages and Next.js modules
+
+**Forbidden Import Patterns:**
+- Direct imports from other apps: `@cms/*`, `@api/*`
+- Cross-app relative imports: `../../../apps/cms/src/*`
+- Hand-coded shadcn/ui components (must use CLI installation)
+
+**TypeScript Configuration:**
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@workspace/*": ["../../packages/*/src"],
+      "@web/*": ["./src/*"]
+    }
+  }
+}
+```
+
+**ESLint Enforcement:**
+```json
+{
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["@cms/*", "@api/*"],
+            "message": "Web app cannot import from other apps. Use @workspace/* packages."
+          },
+          {
+            "group": ["../../../apps/*"],
+            "message": "Use proper aliases instead of relative cross-app imports."
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 5.3 Caching & Performance Strategy
+
+**ISR with Tag Revalidation:**
+- Content pages: `export const revalidate = 3600` (1 hour)
+- Tagged fetches: `fetch(url, { next: { tags: ['content:services', 'content:posts'] } })`
+- Dynamic revalidation: CMS mutations trigger `revalidateTag('content:<model>')`
+
+**Performance Optimizations:**
+- Image optimization with Next.js Image component
+- Font optimization with next/font
+- Bundle splitting and code splitting
+- Service Worker for offline functionality
+- Critical CSS inlining
+
+**Core Web Vitals Targets:**
+- Largest Contentful Paint (LCP): < 2.5s
+- First Input Delay (FID): < 100ms
+- Cumulative Layout Shift (CLS): < 0.1
+- First Contentful Paint (FCP): < 1.8s
+
+### 5.4 SEO & Metadata
+
+**Metadata API Implementation:**
+```typescript
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const service = await getService(params.slug, params.locale)
+  
+  return {
+    title: service.seoTitle || service.title,
+    description: service.seoDescription || service.excerpt,
+    openGraph: {
+      title: service.title,
+      description: service.excerpt,
+      images: [service.image],
+      locale: params.locale,
+      type: 'website'
+    },
+    alternates: {
+      canonical: `/${params.locale}/services/${params.slug}`,
+      languages: {
+        'en': `/en/services/${params.slug}`,
+        'ar': `/ar/services/${params.slug}`
+      }
+    }
+  }
+}
+```
+
+**JSON-LD Structured Data:**
+- Organization schema for company information
+- Service schema for individual services
+- Review schema for testimonials
+- LocalBusiness schema for location-based services
+
+## 6. Internationalization (i18n)
+
+### 6.1 Locale Configuration
+- **Supported Locales**: English (en), Arabic (ar)
+- **Default Locale**: English (en)
+- **Locale Detection**: Browser preference with manual override
+- **URL Structure**: `/en/services`, `/ar/services`
+
+### 6.2 RTL Support
+- **Layout Direction**: Automatic RTL for Arabic content
+- **CSS Properties**: Logical properties (margin-inline-start, padding-inline-end)
+- **Component Adaptation**: RTL-aware navigation, forms, and content layout
+- **Icon Mirroring**: Directional icons flip for RTL layouts
+
+### 6.3 Content Translation
+- **Static Content**: Translation files in `messages/en.json`, `messages/ar.json`
+- **Dynamic Content**: Fetched from API with locale parameter
+- **Fallback Strategy**: English content when Arabic translation unavailable
+- **SEO Considerations**: Proper hreflang tags and canonical URLs
+
+## 7. Form Handling & Validation
+
+### 7.1 Contact Form Implementation
+```typescript
+const contactSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid email address'),
+  phone: z.string().optional(),
+  service: z.string().min(1, 'Please select a service'),
+  message: z.string().max(2000, 'Message must be under 2000 characters'),
+  recaptchaToken: z.string().min(1, 'Please complete the CAPTCHA')
+})
+
+type ContactFormData = z.infer<typeof contactSchema>
+```
+
+### 7.2 Form Security
+- **Client Validation**: Real-time validation with React Hook Form
+- **Server Validation**: Zod schema validation on API endpoints
+- **CAPTCHA Protection**: reCAPTCHA v3 for spam prevention
+- **Rate Limiting**: Prevent form spam and abuse
+- **CSRF Protection**: Built-in Next.js CSRF protection
+
+### 7.3 Form Submission Flow
+1. **Client Validation**: Real-time field validation with error messages
+2. **CAPTCHA Verification**: reCAPTCHA token generation and validation
+3. **API Submission**: POST to `/api/leads/capture` with validated data
+4. **Server Processing**: Zod validation, CAPTCHA verification, database storage
+5. **Email Notification**: SMTP email to admin and confirmation to user
+6. **Success Feedback**: Thank you page with next steps information
+
+## 8. Content Management Integration
+
+### 8.1 API Integration
+- **REST Endpoints**: Simple GET requests for content fetching
+- **GraphQL Queries**: Complex queries for related content and filtering
+- **Caching Strategy**: ISR with tag-based revalidation for fresh content
+- **Error Handling**: Graceful fallbacks for API failures
+
+### 8.2 Content Types
+- **Services**: Dynamic service pages with pricing and descriptions
+- **Blog Posts**: SEO-optimized articles with categories and tags
+- **Testimonials**: Customer reviews with ratings and photos
+- **Team Members**: Staff profiles with expertise and contact info
+- **Company Info**: About page content with mission and values
+
+### 8.3 Real-time Updates
+- **Tag Revalidation**: Instant content updates when CMS publishes changes
+- **Cache Invalidation**: Automatic cache clearing for updated content
+- **Preview Mode**: Draft content preview for content creators
+- **Rollback Support**: Previous version restoration capabilities
+
+## 9. Analytics & Monitoring (No Third-Party Analytics)
+
+### 9.1 Performance Monitoring
+- **Core Web Vitals**: Built-in Next.js analytics for performance metrics
+- **Error Tracking**: Custom error boundaries and logging
+- **Uptime Monitoring**: Health check endpoints for service monitoring
+- **Build Analytics**: Bundle size tracking and optimization alerts
+
+### 9.2 Conversion Tracking
+- **Form Submissions**: Server-side tracking of lead generation
+- **Page Views**: Server-side analytics for content performance
+- **User Journey**: Custom tracking for conversion funnel analysis
+- **A/B Testing**: Feature flags for conversion optimization
+
+## 10. Deployment & Environment
+
+### 10.1 Vercel Configuration
+- **Framework**: Next.js with automatic optimization
+- **Build Command**: `cd ../.. && pnpm build --filter=web`
+- **Output Directory**: `.next` (automatic)
+- **Node Version**: 18.x or later
+- **Environment Variables**: Production secrets and configuration
+
+### 10.2 Environment Variables
+```bash
+# Public Configuration
+NEXT_PUBLIC_API_URL=https://aurora-api.vercel.app
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY=your_recaptcha_site_key
+NEXT_PUBLIC_DEFAULT_LOCALE=en
+NEXT_PUBLIC_SUPPORTED_LOCALES=en,ar
+
+# Build Configuration
+NEXT_TELEMETRY_DISABLED=1
+ANALYZE=false
+```
+
+### 10.3 Build Optimization
+- **Bundle Analysis**: Regular bundle size monitoring
+- **Image Optimization**: Automatic WebP conversion and sizing
+- **Font Optimization**: Preloading and font display optimization
+- **Code Splitting**: Automatic route-based code splitting
+- **Tree Shaking**: Unused code elimination
+
+This web application serves as the primary conversion engine for Aurora, delivering optimized performance, multilingual support, and seamless integration with the CMS and API layers while maintaining strict architectural boundaries.

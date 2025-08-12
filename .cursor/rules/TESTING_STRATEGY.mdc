@@ -1,0 +1,406 @@
+---
+alwaysApply: true
+---
+# Aurora HVAC Monorepo Testing Strategy
+
+## Overview
+
+This document outlines the comprehensive testing strategy for the Aurora HVAC monorepo, covering all packages, applications, and integration points. The strategy emphasizes reliability, maintainability, and developer experience while ensuring high code quality across the entire codebase.
+
+## Testing Philosophy
+
+### Core Principles
+1. **Test-Driven Development**: Write tests before or alongside implementation
+2. **Fast Feedback**: Tests should run quickly to enable rapid development cycles
+3. **Comprehensive Coverage**: Aim for high test coverage without sacrificing quality
+4. **Isolation**: Tests should be independent and not rely on external services
+5. **Maintainability**: Tests should be easy to understand, modify, and extend
+6. **Real-World Scenarios**: Tests should reflect actual usage patterns
+
+### Testing Pyramid
+```
+    /\     E2E Tests (Few)
+   /  \    - Critical user journeys
+  /____\   - Cross-application workflows
+ /      \  
+/________\ Integration Tests (Some)
+          - API endpoints
+          - Database operations
+          - Service interactions
+
+________________ Unit Tests (Many)
+                - Pure functions
+                - Business logic
+                - Component behavior
+```
+
+## Monorepo Structure
+
+### Packages
+- **@workspace/core**: Business logic and utilities
+- **@workspace/config**: Configuration management
+- **@workspace/database**: Prisma ORM and database operations
+- **@workspace/analytics**: Event tracking and analytics
+- **@workspace/auth**: Authentication and authorization
+- **@workspace/search**: Search functionality
+- **@workspace/ui**: Shared UI components
+
+### Applications
+- **web**: Public-facing website
+- **cms**: Content management system
+- **api**: Backend API services
+
+## Testing Framework Stack
+
+### Primary Tools
+- **Vitest**: Modern testing framework for unit and integration tests
+- **Playwright**: End-to-end testing for web applications
+- **Testing Library**: Component testing utilities
+- **MSW (Mock Service Worker)**: API mocking for integration tests
+
+### Supporting Tools
+- **@vitest/coverage-v8**: Code coverage reporting
+- **@testing-library/jest-dom**: Custom DOM matchers
+- **@testing-library/user-event**: User interaction simulation
+- **prisma-mock**: Database mocking for Prisma
+
+## Package Testing Strategies
+
+### 1. Core Package (`@workspace/core`)
+**Status**: ✅ Completed
+
+**Testing Approach**:
+- **Business Logic**: Comprehensive unit tests for all business operations
+- **Validation**: Schema validation and error handling
+- **Utilities**: Helper functions and type guards
+- **Constants**: Business constants and configurations
+
+**Key Test Areas**:
+- Lead management workflows
+- Service operations
+- Content management
+- Error handling and validation
+- Response formatting
+
+### 2. Config Package (`@workspace/config`)
+**Status**: ✅ Completed
+
+**Testing Approach**:
+- **Environment Management**: Configuration loading and validation
+- **Utility Functions**: Helper functions for configuration
+- **Schema Validation**: Zod schema testing
+- **Constants**: Application-wide constants
+
+**Key Test Areas**:
+- Environment variable validation
+- Configuration utility functions
+- Business configuration validation
+- Service configuration management
+
+### 3. Database Package (`@workspace/database`)
+**Status**: ✅ Completed
+
+**Testing Approach**:
+- **Client Configuration**: Prisma client setup and extensions
+- **Database Operations**: CRUD operations with comprehensive mocking
+- **Seeding**: Database initialization and seed data
+- **Utilities**: Database helper functions
+
+**Key Test Areas**:
+- Prisma client configuration
+- Database seeding workflows
+- Utility functions for all models
+- Connection management
+- Process event handlers
+
+### 4. Analytics Package (`@workspace/analytics`)
+**Status**: 📋 Next in Queue
+
+**Planned Testing Approach**:
+- **Event Tracking**: User interaction and business event tracking
+- **Data Collection**: Analytics data aggregation
+- **Reporting**: Analytics reporting utilities
+- **Privacy**: GDPR compliance and data anonymization
+
+**Planned Test Areas**:
+- Event tracking accuracy
+- Data collection workflows
+- Privacy compliance
+- Reporting functionality
+
+### 5. Auth Package (`@workspace/auth`)
+**Status**: 📋 Pending
+
+**Planned Testing Approach**:
+- **Authentication Flows**: Login, logout, registration
+- **Session Management**: Session creation, validation, expiration
+- **Authorization**: Role-based access control
+- **Security**: Token validation, CSRF protection
+
+**Planned Test Areas**:
+- NextAuth configuration
+- Authentication providers
+- Session management
+- Authorization middleware
+- Security measures
+
+### 6. Search Package (`@workspace/search`)
+**Status**: 📋 Pending
+
+**Planned Testing Approach**:
+- **Search Functionality**: Query processing and results
+- **Indexing**: Content indexing and updates
+- **Performance**: Search performance and optimization
+- **Relevance**: Search result ranking and filtering
+
+**Planned Test Areas**:
+- Search query processing
+- Index management
+- Result ranking algorithms
+- Performance benchmarks
+
+### 7. UI Package (`@workspace/ui`)
+**Status**: 📋 Pending
+
+**Planned Testing Approach**:
+- **Component Rendering**: Visual and functional testing
+- **Accessibility**: WCAG compliance testing
+- **Responsive Design**: Multi-device compatibility
+- **Interactions**: User interaction handling
+
+**Planned Test Areas**:
+- Component behavior
+- Accessibility compliance
+- Responsive layouts
+- User interactions
+- Theme and styling
+
+## Application Testing Strategies
+
+### Web Application
+**Testing Approach**:
+- **Page Rendering**: Server-side and client-side rendering
+- **User Journeys**: Critical user flows (contact forms, service requests)
+- **Performance**: Page load times and Core Web Vitals
+- **SEO**: Meta tags, structured data, accessibility
+
+**Key Test Areas**:
+- Homepage and service pages
+- Contact and quote request forms
+- Blog and content pages
+- Mobile responsiveness
+- Performance metrics
+
+### CMS Application
+**Testing Approach**:
+- **Content Management**: CRUD operations for all content types
+- **Authentication**: Admin access and permissions
+- **Workflows**: Content publishing and approval processes
+- **Data Integrity**: Content validation and relationships
+
+**Key Test Areas**:
+- Content creation and editing
+- User authentication and authorization
+- Content publishing workflows
+- Data validation and integrity
+
+### API Application
+**Testing Approach**:
+- **Endpoint Testing**: REST and GraphQL API endpoints
+- **Authentication**: API authentication and authorization
+- **Data Validation**: Request/response validation
+- **Error Handling**: Proper error responses and logging
+
+**Key Test Areas**:
+- REST API endpoints
+- GraphQL resolvers
+- Authentication middleware
+- Input validation
+- Error handling
+
+## Integration Testing
+
+### Database Integration
+- **Real Database Tests**: Tests with actual database connections
+- **Migration Testing**: Schema migration validation
+- **Performance Testing**: Query performance and optimization
+- **Data Integrity**: Referential integrity and constraints
+
+### API Integration
+- **Cross-Package Integration**: Testing package interactions
+- **External Service Integration**: Third-party API integration
+- **Authentication Integration**: Auth flow testing
+- **Data Flow Testing**: End-to-end data workflows
+
+### Frontend Integration
+- **API Integration**: Frontend-backend communication
+- **State Management**: Application state consistency
+- **User Flow Testing**: Complete user journey testing
+- **Cross-Browser Testing**: Browser compatibility
+
+## End-to-End Testing
+
+### Critical User Journeys
+1. **Lead Generation Flow**:
+   - User visits website
+   - Fills out contact form
+   - Lead is created in database
+   - Admin receives notification
+
+2. **Service Request Flow**:
+   - User browses services
+   - Requests quote for specific service
+   - Quote request is processed
+   - Follow-up communication initiated
+
+3. **Content Management Flow**:
+   - Admin logs into CMS
+   - Creates/edits content
+   - Publishes content
+   - Content appears on website
+
+### Testing Environment
+- **Staging Environment**: Production-like environment for E2E tests
+- **Test Data**: Consistent test data for reliable testing
+- **Browser Matrix**: Chrome, Firefox, Safari, Edge
+- **Device Testing**: Desktop, tablet, mobile viewports
+
+## CI/CD Integration
+
+### GitHub Actions Workflow
+```yaml
+name: CI/CD Pipeline
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+      - name: Setup Node.js
+      - name: Install dependencies
+      - name: Run linting
+      - name: Run type checking
+      - name: Run unit tests
+      - name: Run integration tests
+      - name: Run E2E tests
+      - name: Generate coverage report
+      - name: Upload coverage to Codecov
+```
+
+### Quality Gates
+- **Code Coverage**: Minimum 80% coverage for packages
+- **Type Safety**: Zero TypeScript errors
+- **Linting**: ESLint and Prettier compliance
+- **Security**: Dependency vulnerability scanning
+- **Performance**: Bundle size and performance budgets
+
+## Testing Best Practices
+
+### 1. Test Organization
+- **Descriptive Names**: Clear, descriptive test names
+- **Logical Grouping**: Related tests grouped in describe blocks
+- **Setup/Teardown**: Proper test setup and cleanup
+- **Test Data**: Consistent and meaningful test data
+
+### 2. Mock Strategies
+- **External Dependencies**: Mock external APIs and services
+- **Database Operations**: Use mocks for unit tests, real DB for integration
+- **Time-Dependent Code**: Mock dates and timers
+- **File System**: Mock file operations
+
+### 3. Assertion Patterns
+- **Specific Assertions**: Test specific behaviors, not implementation details
+- **Error Testing**: Test both success and failure scenarios
+- **Edge Cases**: Test boundary conditions and edge cases
+- **Async Testing**: Proper handling of asynchronous operations
+
+### 4. Performance Considerations
+- **Fast Tests**: Keep unit tests fast (<100ms each)
+- **Parallel Execution**: Run tests in parallel when possible
+- **Resource Cleanup**: Proper cleanup to prevent memory leaks
+- **Test Isolation**: Ensure tests don't interfere with each other
+
+## Coverage Goals
+
+### Package Coverage Targets
+- **Core Package**: 90%+ (business-critical logic)
+- **Database Package**: 85%+ (data operations)
+- **Config Package**: 80%+ (configuration management)
+- **Auth Package**: 90%+ (security-critical)
+- **Other Packages**: 75%+ (supporting functionality)
+
+### Application Coverage Targets
+- **API Application**: 85%+ (backend logic)
+- **CMS Application**: 75%+ (admin functionality)
+- **Web Application**: 70%+ (public-facing features)
+
+## Monitoring and Reporting
+
+### Test Metrics
+- **Test Execution Time**: Monitor test performance
+- **Flaky Test Detection**: Identify and fix unreliable tests
+- **Coverage Trends**: Track coverage changes over time
+- **Failure Analysis**: Analyze test failure patterns
+
+### Reporting Tools
+- **Coverage Reports**: HTML and JSON coverage reports
+- **Test Results**: JUnit XML for CI integration
+- **Performance Metrics**: Test execution time tracking
+- **Quality Metrics**: Code quality and maintainability scores
+
+## Maintenance and Evolution
+
+### Regular Maintenance
+- **Dependency Updates**: Keep testing dependencies current
+- **Test Review**: Regular review of test effectiveness
+- **Refactoring**: Improve test maintainability
+- **Documentation**: Keep testing documentation updated
+
+### Continuous Improvement
+- **Feedback Loops**: Gather feedback from development team
+- **Tool Evaluation**: Evaluate new testing tools and techniques
+- **Process Optimization**: Optimize testing workflows
+- **Knowledge Sharing**: Share testing best practices across team
+
+## Troubleshooting Guide
+
+### Common Issues
+1. **Flaky Tests**: Identify and fix non-deterministic tests
+2. **Slow Tests**: Optimize test performance
+3. **Mock Issues**: Resolve mocking and stubbing problems
+4. **Environment Issues**: Fix test environment configuration
+5. **Coverage Gaps**: Identify and address coverage gaps
+
+### Debugging Strategies
+- **Test Isolation**: Run tests in isolation to identify issues
+- **Verbose Output**: Use verbose test output for debugging
+- **Step-by-Step Debugging**: Debug tests step by step
+- **Log Analysis**: Analyze test logs for error patterns
+
+## Future Enhancements
+
+### Short-term (Next 3 months)
+- Complete testing setup for remaining packages
+- Implement E2E testing framework
+- Set up CI/CD pipeline with quality gates
+- Establish coverage reporting and monitoring
+
+### Medium-term (3-6 months)
+- Implement visual regression testing
+- Add performance testing suite
+- Enhance integration testing coverage
+- Implement automated accessibility testing
+
+### Long-term (6+ months)
+- Implement chaos engineering practices
+- Add load testing and stress testing
+- Implement contract testing for APIs
+- Enhance monitoring and alerting for test failures
+
+## Conclusion
+
+This testing strategy provides a comprehensive framework for ensuring code quality, reliability, and maintainability across the Aurora HVAC monorepo. By following these guidelines and continuously improving our testing practices, we can deliver a robust and reliable application that meets user needs and business requirements.
+
+The strategy emphasizes automation, fast feedback, and comprehensive coverage while maintaining developer productivity and code quality. Regular review and updates of this strategy will ensure it remains effective as the project evolves.
