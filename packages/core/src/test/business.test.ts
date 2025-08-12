@@ -109,9 +109,10 @@ describe('Business Logic Tests', () => {
   
   describe('Utility Functions', () => {
     it('should calculate estimated value correctly', () => {
-      const value = calculateEstimatedValue('hvac_installation', 'residential')
+      const value = calculateEstimatedValue('hvac_installation', 'MEDIUM')
       expect(typeof value).toBe('number')
       expect(value).toBeGreaterThan(0)
+      expect(value).toBe(5000) // hvac_installation base value with MEDIUM complexity
     })
     
     it('should generate unique quote numbers', () => {
@@ -155,4 +156,7 @@ describe('Business Logic Tests', () => {
       
       // Should be Monday
       expect(nextBusinessDay.getDay()).toBe(1) // Monday
-      expect(nextBusinessDay.getDate
+      expect(nextBusinessDay.getDate()).toBe(10) // January 10th, 2022
+    })
+  })
+})

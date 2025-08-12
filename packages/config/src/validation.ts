@@ -9,45 +9,66 @@ import type {
 } from './types'
 
 // Validation schemas
-const businessHoursSchema = z.object({
-  open: z.string().regex(/^\d{1,2}:\d{2}$/, 'Invalid time format (HH:MM)'),
-  close: z.string().regex(/^\d{1,2}:\d{2}$/, 'Invalid time format (HH:MM)'),
+export const businessHoursDaySchema = z.object({
+  open: z.string(),
+  close: z.string(),
   closed: z.boolean(),
+}).refine((data) => {
+  if (data.closed) {
+    return true; // When closed, open and close can be empty
+  }
+  // When not closed, validate time format
+  const timeRegex = /^\d{1,2}:\d{2}$/;
+  if (!timeRegex.test(data.open) || !timeRegex.test(data.close)) {
+    return false;
+  }
+  // Validate time values
+  const [openHour, openMinute] = data.open.split(':').map(Number);
+  const [closeHour, closeMinute] = data.close.split(':').map(Number);
+  return openHour >= 0 && openHour <= 23 && openMinute >= 0 && openMinute <= 59 &&
+         closeHour >= 0 && closeHour <= 23 && closeMinute >= 0 && closeMinute <= 59;
+}, {
+  message: 'Invalid time format or values when not closed',
 })
 
-const contactInfoSchema = z.object({
-  name: z.string().min(1, 'Business name is required'),
+export const businessHoursSchema = z.object({
+  monday: businessHoursDaySchema,
+  tuesday: businessHoursDaySchema,
+  wednesday: businessHoursDaySchema,
+  thursday: businessHoursDaySchema,
+  friday: businessHoursDaySchema,
+  saturday: businessHoursDaySchema,
+  sunday: businessHoursDaySchema,
+})
+
+export const contactInfoSchema = z.object({
   phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format'),
   email: z.string().email('Invalid email address'),
-  address: z.object({
-    street: z.string().min(1, 'Street address is required'),
-    city: z.string().min(1, 'City is required'),
-    state: z.string().min(2, 'State is required'),
-    zip: z.string().regex(/^\d{5}(-\d{4})?$/, 'Invalid ZIP code format'),
-    country: z.string().min(2, 'Country is required'),
-  }),
+  address: z.string().min(1, 'Address is required'),
+  website: z.string().url('Invalid website URL').optional(),
 })
 
-const serviceCategorySchema = z.object({
+export const serviceCategorySchema = z.object({
   id: z.string().min(1, 'Category ID is required'),
   name: z.string().min(1, 'Category name is required'),
   description: z.string().min(1, 'Category description is required'),
   icon: z.string().min(1, 'Category icon is required'),
+  color: z.string().regex(/^#[0-9A-F]{6}$/i, 'Invalid color format'),
   services: z.array(z.string()).min(1, 'At least one service is required'),
+  priceRange: z.object({
+    min: z.number().min(0, 'Minimum price must be non-negative'),
+    max: z.number().min(0, 'Maximum price must be non-negative'),
+  }),
+  estimatedDuration: z.string().min(1, 'Estimated duration is required'),
+  featured: z.boolean(),
 })
 
-const apiEndpointSchema = z.object({
+export const apiEndpointSchema = z.object({
   method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']),
   path: z.string().min(1, 'API path is required'),
-  rateLimit: z.object({
-    requests: z.number().min(1, 'Rate limit requests must be positive'),
-    window: z.number().min(1000, 'Rate limit window must be at least 1 second'),
-  }).optional(),
-  timeout: z.number().min(1000, 'Timeout must be at least 1 second').optional(),
-  cache: z.object({
-    enabled: z.boolean(),
-    ttl: z.number().min(0, 'Cache TTL must be non-negative'),
-  }).optional(),
+  rateLimit: z.number().min(1, 'Rate limit must be positive'),
+  auth: z.boolean(),
+  cache: z.boolean(),
 })
 
 // Main validation function
@@ -55,45 +76,55 @@ export function validateConfig(config: any): ConfigValidationResult {
   const errors: string[] = []
   const warnings: string[] = []
 
-  // Validate required sections
-  const sections: ConfigSection[] = [
-    {
-      name: 'business',
-      required: true,
-      validator: validateBusinessConfig,
-    },
-    {
-      name: 'services',
-      required: true,
-      validator: validateServiceConfig,
-    },
-    {
-      name: 'api',
-      required: true,
-      validator: validateApiConfig,
-    },
-    {
-      name: 'features',
-      required: false,
-      validator: validateFeatureConfig,
-    },
-  ]
-
-  sections.forEach(section => {
-    if (section.required && !config[section.name]) {
-      errors.push(`Missing required configuration section: ${section.name}`)
-      return
+  // Check for missing business sections
+  if (!config.business) {
+    errors.push('Missing business section')
+  } else {
+    if (!config.business.contact) {
+      errors.push('Missing business.contact section')
     }
-
-    if (config[section.name]) {
-      const result = section.validator(config[section.name])
-      errors.push(...result.errors.map(err => `${section.name}: ${err}`))
-      warnings.push(...result.warnings.map(warn => `${section.name}: ${warn}`))
+    if (!config.business.hours) {
+      errors.push('Missing business.hours section')
     }
-  })
+  }
+
+  // Check for missing services section
+  if (!config.services) {
+    errors.push('Missing services section')
+  }
+
+  // Check for missing api section
+  if (!config.api) {
+    errors.push('Missing api section')
+  }
+
+  // Validate sections if they exist
+  if (config.business) {
+    const result = validateBusinessConfig(config.business)
+    errors.push(...result.errors)
+    warnings.push(...result.warnings)
+  }
+
+  if (config.services) {
+    const result = validateServiceConfig(config.services)
+    errors.push(...result.errors)
+    warnings.push(...result.warnings)
+  }
+
+  if (config.api) {
+    const result = validateApiConfig(config.api)
+    errors.push(...result.errors)
+    warnings.push(...result.warnings)
+  }
+
+  if (config.features) {
+    const result = validateFeatureConfig(config.features)
+    errors.push(...result.errors)
+    warnings.push(...result.warnings)
+  }
 
   return {
-    valid: errors.length === 0,
+    isValid: errors.length === 0,
     errors,
     warnings,
   }
@@ -105,9 +136,22 @@ export function validateBusinessConfig(config: any): ConfigValidationResult {
   const warnings: string[] = []
 
   try {
+    // Validate business name
+    if (!config.name) {
+      errors.push('Business name is required')
+    } else if (typeof config.name !== 'string') {
+      errors.push('Business name must be a string')
+    }
+
     // Validate contact info
-    if (config.contactInfo) {
-      contactInfoSchema.parse(config.contactInfo)
+    if (config.contact) {
+      try {
+        contactInfoSchema.parse(config.contact)
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          errors.push(...error.errors.map(err => `Invalid ${err.path.join('.')}: ${err.message}`))
+        }
+      }
     } else {
       errors.push('Contact information is required')
     }
@@ -119,11 +163,11 @@ export function validateBusinessConfig(config: any): ConfigValidationResult {
       days.forEach(day => {
         if (config.hours[day]) {
           try {
-            businessHoursSchema.parse(config.hours[day])
+            businessHoursDaySchema.parse(config.hours[day])
             
             // Check for logical time order
             const hours = config.hours[day] as BusinessHours
-            if (!hours.closed) {
+            if (!hours.closed && hours.open && hours.close) {
               const [openHour, openMinute] = hours.open.split(':').map(Number)
               const [closeHour, closeMinute] = hours.close.split(':').map(Number)
               
@@ -131,7 +175,7 @@ export function validateBusinessConfig(config: any): ConfigValidationResult {
               const closeTime = closeHour * 60 + closeMinute
               
               if (openTime >= closeTime) {
-                warnings.push(`${day}: Opening time should be before closing time`)
+                errors.push(`${day}: Opening time should be before closing time`)
               }
             }
           } catch (error) {
@@ -181,7 +225,7 @@ export function validateBusinessConfig(config: any): ConfigValidationResult {
     }
   }
 
-  return { valid: errors.length === 0, errors, warnings }
+  return { isValid: errors.length === 0, errors, warnings }
 }
 
 // Service configuration validation
@@ -192,28 +236,41 @@ export function validateServiceConfig(config: any): ConfigValidationResult {
   try {
     // Validate service categories
     if (config.categories) {
-      if (typeof config.categories !== 'object') {
-        errors.push('Service categories must be an object')
+      if (!Array.isArray(config.categories)) {
+        errors.push('Service categories must be an array')
       } else {
-        Object.entries(config.categories).forEach(([key, category]) => {
+        const categoryIds: string[] = []
+        
+        config.categories.forEach((category: any, index: number) => {
           try {
             serviceCategorySchema.parse(category)
             
-            // Check for duplicate service IDs across categories
-            const categoryData = category as ServiceCategory
-            if (categoryData.id !== key) {
-              warnings.push(`Category key '${key}' does not match category ID '${categoryData.id}'`)
+            // Check for duplicate category IDs
+            if (categoryIds.includes(category.id)) {
+              errors.push(`Duplicate service category ID: ${category.id}`)
+            } else {
+              categoryIds.push(category.id)
             }
+            
+            // Check for invalid price ranges
+            if (category.priceRange) {
+              if (typeof category.priceRange.min !== 'number' || typeof category.priceRange.max !== 'number') {
+                errors.push(`Category '${category.id}': Price range must have numeric min and max values`)
+              } else if (category.priceRange.min >= category.priceRange.max) {
+                errors.push(`Category '${category.id}': Invalid price range - minimum (${category.priceRange.min}) must be less than maximum (${category.priceRange.max})`)
+              }
+            }
+            
           } catch (error) {
             if (error instanceof z.ZodError) {
-              errors.push(`Category '${key}': ${error.errors[0].message}`)
+              errors.push(`Category ${index}: ${error.errors[0].message}`)
             }
           }
         })
         
         // Check for duplicate services across categories
         const allServices: string[] = []
-        Object.values(config.categories).forEach((category: any) => {
+        config.categories.forEach((category: any) => {
           if (category.services) {
             category.services.forEach((service: string) => {
               if (allServices.includes(service)) {
@@ -262,7 +319,7 @@ export function validateServiceConfig(config: any): ConfigValidationResult {
     errors.push('Unknown validation error in service configuration')
   }
 
-  return { valid: errors.length === 0, errors, warnings }
+  return { isValid: errors.length === 0, errors, warnings }
 }
 
 // API configuration validation
@@ -333,7 +390,7 @@ export function validateApiConfig(config: any): ConfigValidationResult {
     errors.push('Unknown validation error in API configuration')
   }
 
-  return { valid: errors.length === 0, errors, warnings }
+  return { isValid: errors.length === 0, errors, warnings }
 }
 
 // Feature configuration validation
@@ -377,7 +434,7 @@ export function validateFeatureConfig(config: any): ConfigValidationResult {
     errors.push('Unknown validation error in feature configuration')
   }
 
-  return { valid: errors.length === 0, errors, warnings }
+  return { isValid: errors.length === 0, errors, warnings }
 }
 
 // Environment validation
@@ -453,7 +510,7 @@ export function validateEnvironmentConfig(env: Record<string, any>): ConfigValid
     errors.push('JWT_SECRET should be at least 32 characters long')
   }
 
-  return { valid: errors.length === 0, errors, warnings }
+  return { isValid: errors.length === 0, errors, warnings }
 }
 
 // Utility functions for validation
@@ -541,3 +598,6 @@ export function checkConfigCompleteness(config: any): {
     recommendations,
   }
 }
+
+// Alias for backward compatibility
+export const validateConfiguration = validateConfig

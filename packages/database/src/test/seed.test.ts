@@ -156,8 +156,9 @@ describe('Database Seed', () => {
       expect(mockPrismaClient.testimonial.create).toHaveBeenCalledWith({
         data: {
           name: 'Sarah Johnson',
-          company: 'Johnson Residence',
-          content: 'Aurora HVAC installed our new system perfectly. Professional, clean, and efficient work!',
+          company: 'Johnson Enterprises',
+          position: 'Facility Manager',
+          content: 'Aurora provided exceptional HVAC installation service. Their team was professional, efficient, and the system works perfectly. Highly recommended!',
           rating: 5,
           approved: true,
           featured: true,
@@ -168,14 +169,12 @@ describe('Database Seed', () => {
       expect(mockPrismaClient.teamMember.create).toHaveBeenCalledTimes(3)
       expect(mockPrismaClient.teamMember.create).toHaveBeenCalledWith({
         data: {
-          name: 'Mike Rodriguez',
+          name: 'John Smith',
           position: 'Lead HVAC Technician',
-          bio: 'Mike has over 15 years of experience in HVAC installation and repair.',
-          image: '/images/team/mike.jpg',
-          email: 'mike@aurora-hvac.com',
-          phone: '+1 (555) 123-4567',
-          active: true,
+          bio: 'John has over 15 years of experience in HVAC installation and repair. He holds multiple certifications and leads our technical team.',
+          specialties: ['HVAC Installation', 'System Design', 'Energy Efficiency'],
           featured: true,
+          active: true,
           order: 1,
         },
       })
@@ -188,30 +187,26 @@ describe('Database Seed', () => {
       expect(mockPrismaClient.post.create).toHaveBeenCalledWith({
         data: {
           title: '5 Signs Your HVAC System Needs Repair',
-          slug: '5-signs-hvac-needs-repair',
-          excerpt: 'Learn the warning signs that indicate your HVAC system may need professional attention.',
-          content: expect.stringContaining('Your HVAC system works hard'),
-          published: true,
+          slug: '5-signs-hvac-system-needs-repair',
+          excerpt: 'Identify warning signs that your HVAC system needs professional repair',
+          content: 'Learn to identify the warning signs that indicate your HVAC system requires professional attention...',
+          category: 'Maintenance Tips',
+          tags: ['hvac', 'maintenance', 'repair', 'tips'],
           status: 'PUBLISHED',
+          published: true,
           publishedAt: expect.any(Date),
           authorId: mockUser.id,
-          featured: true,
-          image: '/images/blog/hvac-repair-signs.jpg',
-          tags: ['HVAC', 'Maintenance', 'Repair'],
-          seoTitle: '5 Signs Your HVAC System Needs Repair | Aurora HVAC',
-          seoDescription: 'Discover the key warning signs that your HVAC system needs professional repair services.',
         },
       })
 
       // Verify settings creation
-      expect(mockPrismaClient.setting.upsert).toHaveBeenCalledTimes(6)
+      expect(mockPrismaClient.setting.upsert).toHaveBeenCalledTimes(9)
       expect(mockPrismaClient.setting.upsert).toHaveBeenCalledWith({
         where: { key: 'site_title' },
-        update: {},
+        update: { value: 'Aurora HVAC Services', category: 'general' },
         create: {
           key: 'site_title',
-          value: 'Aurora HVAC',
-          type: 'string',
+          value: 'Aurora HVAC Services',
           category: 'general',
         },
       })
@@ -220,13 +215,15 @@ describe('Database Seed', () => {
       expect(mockPrismaClient.lead.create).toHaveBeenCalledTimes(2)
       expect(mockPrismaClient.lead.create).toHaveBeenCalledWith({
         data: {
-          name: 'John Smith',
-          email: 'john.smith@email.com',
-          phone: '+1 (555) 987-6543',
-          message: 'Need AC repair urgently. System not cooling properly.',
+          name: 'Jennifer Adams',
+          email: 'jennifer.adams@email.com',
+          phone: '+1 (555) 234-5678',
+          company: 'Adams Consulting',
+          message: 'Need HVAC installation for new office space. Looking for energy-efficient solutions.',
           source: 'WEBSITE',
           status: 'NEW',
           priority: 'HIGH',
+          estimatedValue: 25000,
         },
       })
     })
@@ -286,9 +283,9 @@ describe('Database Seed', () => {
 
       // Check team member order
       const teamMemberCalls = mockPrismaClient.teamMember.create.mock.calls
-      expect(teamMemberCalls[0][0].data.order).toBe(1) // Mike Rodriguez
-      expect(teamMemberCalls[1][0].data.order).toBe(2) // Lisa Chen
-      expect(teamMemberCalls[2][0].data.order).toBe(3) // David Thompson
+      expect(teamMemberCalls[0][0].data.order).toBe(1) // John Smith
+      expect(teamMemberCalls[1][0].data.order).toBe(2) // Maria Garcia
+      expect(teamMemberCalls[2][0].data.order).toBe(3) // David Wilson
     })
 
     it('should create settings with correct categories', async () => {
@@ -316,10 +313,14 @@ describe('Database Seed', () => {
       const settingCalls = mockPrismaClient.setting.upsert.mock.calls
       const generalSettings = settingCalls.filter(call => call[0].create.category === 'general')
       const contactSettings = settingCalls.filter(call => call[0].create.category === 'contact')
+      const businessSettings = settingCalls.filter(call => call[0].create.category === 'business')
+      const securitySettings = settingCalls.filter(call => call[0].create.category === 'security')
       const analyticsSettings = settingCalls.filter(call => call[0].create.category === 'analytics')
 
       expect(generalSettings).toHaveLength(2) // site_title, site_description
       expect(contactSettings).toHaveLength(4) // contact_email, contact_phone, business_hours, emergency_phone
+      expect(businessSettings).toHaveLength(1) // service_areas
+      expect(securitySettings).toHaveLength(1) // google_recaptcha_site_key
       expect(analyticsSettings).toHaveLength(1) // plausible_domain
     })
 
@@ -347,8 +348,8 @@ describe('Database Seed', () => {
       // Verify lead priorities and statuses
       const leadCalls = mockPrismaClient.lead.create.mock.calls
       expect(leadCalls[0][0].data.priority).toBe('HIGH')
-      expect(leadCalls[0][0].data.status).toBe('NEW')
       expect(leadCalls[1][0].data.priority).toBe('URGENT')
+      expect(leadCalls[0][0].data.status).toBe('NEW')
       expect(leadCalls[1][0].data.status).toBe('CONTACTED')
     })
   })

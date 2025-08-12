@@ -171,12 +171,24 @@ export function createErrorResponse(error: BusinessError) {
 // Type guards
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
+  return emailRegex.test(email) && !email.includes('..')
 }
 
 export function isValidPhone(phone: string): boolean {
-  const phoneRegex = /^[\+]?[1-9][\d]{0,3}[\s\-\(]?[\d]{3}[\s\-]?[\d]{3}[\s\-]?[\d]{4}$/
-  return phoneRegex.test(phone.replace(/\D/g, ''))
+  // Remove all non-digit characters for validation
+  const cleaned = phone.replace(/\D/g, '')
+  
+  // Check if it's a valid length (10-15 digits)
+  if (cleaned.length < 10 || cleaned.length > 15) {
+    return false
+  }
+  
+  // Check if it starts with a valid digit (not 0)
+  if (cleaned[0] === '0') {
+    return false
+  }
+  
+  return true
 }
 
 export function isValidSlug(slug: string): boolean {

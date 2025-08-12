@@ -440,8 +440,8 @@ export function calculateEstimatedValue(serviceType: string, complexity: 'LOW' |
 
 export function generateQuoteNumber(): string {
   const date = format(new Date(), 'yyyyMMdd')
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
-  return `Q${date}${random}`
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+  return `Q${date}-${random}`
 }
 
 export function formatCurrency(amount: number, currency: string = 'USD'): string {

@@ -445,7 +445,12 @@ export function generateSEOMetadata({
 }
 
 export function extractTextFromHTML(html: string): string {
-  return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+  // Add space before closing tags to preserve spacing between elements
+  return html
+    .replace(/<\/(p|div|h[1-6]|li|td|th|section|article|header|footer|nav|aside)>/gi, ' </$1>')
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 export function calculateReadingTime(content: string): number {

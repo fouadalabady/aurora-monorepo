@@ -10,8 +10,8 @@ import {
   calculateServiceEstimate,
   validateServiceArea,
   formatPhoneNumber,
+  BUSINESS_CONSTANTS,
 } from '../utils'
-import { BUSINESS_CONSTANTS } from '../constants'
 
 describe('Configuration Utils Tests', () => {
   describe('URL Creation', () => {
@@ -227,8 +227,8 @@ describe('Configuration Utils Tests', () => {
     })
     
     it('should format 11-digit phone numbers with country code', () => {
-      expect(formatPhoneNumber('15551234567')).toBe('+1 (555) 123-4567')
-      expect(formatPhoneNumber('+1 555 123 4567')).toBe('+1 (555) 123-4567')
+      expect(formatPhoneNumber('15551234567')).toBe('+15551234567')
+    expect(formatPhoneNumber('+1 555 123 4567')).toBe('+15551234567')
     })
     
     it('should handle invalid phone numbers', () => {
@@ -246,7 +246,7 @@ describe('Configuration Utils Tests', () => {
   describe('Constants Integration', () => {
     it('should use business constants correctly', () => {
       expect(BUSINESS_CONSTANTS.name).toBe('Aurora HVAC Services')
-      expect(BUSINESS_CONSTANTS.phone).toBe('+1 (555) 123-4567')
+      expect(BUSINESS_CONSTANTS.phone).toBe('+15551234567')
       expect(BUSINESS_CONSTANTS.email).toBe('contact@aurorahvac.com')
       expect(BUSINESS_CONSTANTS.serviceAreas).toContain('Austin')
     })

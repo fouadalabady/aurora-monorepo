@@ -61,7 +61,7 @@ describe('Configuration Validation Tests', () => {
   describe('Contact Info Schema', () => {
     it('should validate correct contact info', () => {
       const validContact: ContactInfo = {
-        phone: '+1 (555) 123-4567',
+        phone: '+15551234567',
         email: 'contact@example.com',
         address: '123 Main St, City, State 12345',
         website: 'https://example.com',
@@ -73,7 +73,7 @@ describe('Configuration Validation Tests', () => {
     
     it('should reject invalid email format', () => {
       const invalidContact = {
-        phone: '+1 (555) 123-4567',
+        phone: '+15551234567',
         email: 'invalid-email',
         address: '123 Main St, City, State 12345',
         website: 'https://example.com',
@@ -85,7 +85,7 @@ describe('Configuration Validation Tests', () => {
     
     it('should reject invalid URL format', () => {
       const invalidContact = {
-        phone: '+1 (555) 123-4567',
+        phone: '+15551234567',
         email: 'contact@example.com',
         address: '123 Main St, City, State 12345',
         website: 'not-a-url',
@@ -197,7 +197,7 @@ describe('Configuration Validation Tests', () => {
           business: {
             name: 'Test HVAC',
             contact: {
-              phone: '+1 (555) 123-4567',
+              phone: '+15551234567',
               email: 'contact@test.com',
               address: '123 Test St',
               website: 'https://test.com',
@@ -261,7 +261,7 @@ describe('Configuration Validation Tests', () => {
           business: {
             name: 123, // Should be string
             contact: {
-              phone: '+1 (555) 123-4567',
+              phone: '+15551234567',
               email: 'invalid-email', // Invalid email
               address: '123 Test St',
               website: 'https://test.com',
@@ -285,10 +285,11 @@ describe('Configuration Validation Tests', () => {
         }
         
         const result = validateConfiguration(config)
+        console.log('Validation errors:', result.errors)
         expect(result.isValid).toBe(false)
-        expect(result.errors.some(error => error.includes('business.name'))).toBe(true)
-        expect(result.errors.some(error => error.includes('business.contact'))).toBe(true)
-        expect(result.errors.some(error => error.includes('business.hours'))).toBe(true)
+        expect(result.errors.some(error => error.includes('Business name must be a string'))).toBe(true)
+        expect(result.errors.some(error => error.includes('Invalid email'))).toBe(true)
+        expect(result.errors.some(error => error.includes('Invalid time format'))).toBe(true)
       })
     })
     
@@ -297,7 +298,7 @@ describe('Configuration Validation Tests', () => {
         const businessConfig = {
           name: 'Test HVAC',
           contact: {
-            phone: '+1 (555) 123-4567',
+            phone: '+15551234567',
             email: 'contact@test.com',
             address: '123 Test St',
             website: 'https://test.com',
@@ -322,7 +323,7 @@ describe('Configuration Validation Tests', () => {
         const businessConfig = {
           name: 'Test HVAC',
           contact: {
-            phone: '+1 (555) 123-4567',
+            phone: '+15551234567',
             email: 'contact@test.com',
             address: '123 Test St',
             website: 'https://test.com',

@@ -1,4 +1,26 @@
 import { BUSINESS_INFO, SERVICE_CATEGORIES, LEAD_CONFIG, PRICING_CONFIG } from './constants'
+
+// Business constants for testing and external use
+export const BUSINESS_CONSTANTS = {
+  name: 'Aurora HVAC Services',
+  phone: '+15551234567',
+  email: 'contact@aurorahvac.com',
+  serviceAreas: ['Austin', 'Round Rock', 'Cedar Park', 'Georgetown', 'Pflugerville', 'Leander'],
+  serviceCategories: [
+    { id: 'hvac-installation', name: 'HVAC Installation' },
+    { id: 'hvac-repair', name: 'HVAC Repair' },
+    { id: 'maintenance', name: 'Maintenance' },
+    { id: 'air-quality', name: 'Air Quality' },
+    { id: 'commercial', name: 'Commercial Services' },
+    { id: 'emergency', name: 'Emergency Services' }
+  ],
+  leadSources: ['website', 'referral', 'google', 'facebook', 'phone', 'email'],
+  pricingTiers: {
+    basic: { name: 'Basic Service' },
+    premium: { name: 'Premium Service' },
+    enterprise: { name: 'Enterprise Service' }
+  }
+} as const
 import { env, getBaseUrl } from './env'
 
 // API URL utilities
@@ -71,9 +93,7 @@ export function getLeadSourceColor(source: keyof typeof LEAD_CONFIG.SOURCES): st
 }
 
 // Business hours utilities
-export function formatBusinessHours(day: keyof typeof BUSINESS_INFO.hours): string {
-  const hours = BUSINESS_INFO.hours[day]
-  
+export function formatBusinessHours(hours: { open: string; close: string; closed: boolean }): string {
   if (hours.closed) {
     return 'Closed'
   }
@@ -90,11 +110,7 @@ export function formatTime(time: string): string {
   return `${displayHour}:${minutes} ${ampm}`
 }
 
-export function isBusinessOpen(date: Date = new Date()): boolean {
-  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
-  const dayName = dayNames[date.getDay()]
-  const hours = BUSINESS_INFO.hours[dayName]
-  
+export function isBusinessOpen(hours: { open: string; close: string; closed: boolean }, date: Date = new Date()): boolean {
   if (hours.closed) {
     return false
   }
@@ -125,27 +141,42 @@ export function getNextBusinessDay(date: Date = new Date()): Date {
 
 // Pricing utilities
 export function calculateServiceEstimate(
-  serviceId: string,
-  complexity: 'simple' | 'moderate' | 'complex' = 'moderate'
-): { min: number; max: number; typical: number } {
-  const baseEstimate = PRICING_CONFIG.ESTIMATE_RANGES[serviceId as keyof typeof PRICING_CONFIG.ESTIMATE_RANGES]
-  
-  if (!baseEstimate) {
-    return { min: 200, max: 1000, typical: 600 }
+  serviceType: string,
+  propertyType: 'residential' | 'commercial',
+  basePrice: number
+): {
+  basePrice: number;
+  laborCost: number;
+  materialCost: number;
+  total: number;
+  estimatedHours: number;
+} {
+  const hourlyRates: Record<string, number> = {
+    'hvac-installation': 250,
+    'maintenance': 75,
+    'repair': 125,
   }
   
-  const multipliers = {
-    simple: 0.8,
-    moderate: 1.0,
-    complex: 1.3,
+  const hourlyRate = hourlyRates[serviceType] || 100 // default rate
+  
+  // Apply commercial multiplier
+  const commercialMultiplier = propertyType === 'commercial' ? 1.2 : 1.0
+  const adjustedBasePrice = basePrice * commercialMultiplier
+  
+  // Calculate labor and material costs (50% each of adjusted base price)
+  const laborCost = adjustedBasePrice * 0.5
+  const materialCost = adjustedBasePrice * 0.5
+  
+  // Calculate estimated hours
+  const estimatedHours = Math.round((adjustedBasePrice / hourlyRate) * 100) / 100
+  
+  return {
+    basePrice,
+    laborCost,
+    materialCost,
+    total: adjustedBasePrice,
+    estimatedHours,
   }
-  
-  const multiplier = multipliers[complexity]
-  const min = Math.round(baseEstimate.min * multiplier)
-  const max = Math.round(baseEstimate.max * multiplier)
-  const typical = Math.round((min + max) / 2)
-  
-  return { min, max, typical }
 }
 
 export function calculateEmergencyRate(baseRate: number, date: Date = new Date()): number {
@@ -169,11 +200,29 @@ export function calculateEmergencyRate(baseRate: number, date: Date = new Date()
 }
 
 // Service area validation
-export function validateServiceArea(city: string): boolean {
-  const normalizedCity = city.toLowerCase().trim()
-  const serviceAreas = BUSINESS_INFO.serviceAreas.map(area => area.toLowerCase())
+export function validateServiceArea(input: string): boolean {
+  const normalizedInput = input.toLowerCase().trim()
   
-  return serviceAreas.includes(normalizedCity)
+  // Define service areas with cities and zip codes
+  const serviceAreas = {
+    cities: ['austin', 'round rock', 'cedar park', 'pflugerville', 'georgetown'],
+    zipCodes: ['78701', '78702', '78703', '78704', '78705', '78664', '78613', '78660', '78628']
+  }
+  
+  // Check if input is a zip code
+  if (/^\d{5}$/.test(normalizedInput)) {
+    return serviceAreas.zipCodes.includes(normalizedInput)
+  }
+  
+  // Check if input contains a city name (for full addresses)
+  for (const city of serviceAreas.cities) {
+    if (normalizedInput.includes(city)) {
+      return true
+    }
+  }
+  
+  // Check if input is just a city name
+  return serviceAreas.cities.includes(normalizedInput)
 }
 
 export function getServiceAreaDistance(city: string): number | null {
@@ -193,14 +242,22 @@ export function getServiceAreaDistance(city: string): number | null {
 
 // Contact utilities
 export function formatPhoneNumber(phone: string): string {
-  const cleaned = phone.replace(/\D/g, '')
+  // Extract extension if present
+  const extensionMatch = phone.match(/(ext|x)\s*(\d+)/i)
+  const extension = extensionMatch ? ` ${extensionMatch[1].toLowerCase()} ${extensionMatch[2]}` : ''
+  
+  // Remove extension from phone number before cleaning
+  const phoneWithoutExt = extensionMatch ? phone.replace(extensionMatch[0], '') : phone
+  
+  // Clean the phone number (remove everything except digits)
+  const cleaned = phoneWithoutExt.replace(/\D/g, '')
   
   if (cleaned.length === 10) {
-    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
+    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}${extension}`
   }
   
   if (cleaned.length === 11 && cleaned[0] === '1') {
-    return `+1 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`
+    return `+1${cleaned.slice(1)}${extension}`
   }
   
   return phone

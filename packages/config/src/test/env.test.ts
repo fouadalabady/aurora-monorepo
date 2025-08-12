@@ -279,7 +279,7 @@ describe('Environment Configuration Tests', () => {
       
       expect(config).toEqual({
         name: 'Test HVAC Services',
-        phone: '+1 (555) 123-4567',
+        phone: '+15551234567',
         email: 'test@example.com',
         address: '123 Test St, Test City, TS 12345',
       })

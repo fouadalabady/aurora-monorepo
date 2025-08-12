@@ -1,3 +1,9 @@
+// Set required environment variables immediately for testing
+process.env.NODE_ENV = 'test'
+process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test_db'
+process.env.NEXTAUTH_SECRET = 'test-secret-key-that-is-32-chars-long'
+process.env.NEXTAUTH_URL = 'http://localhost:3000'
+
 import { beforeEach, afterEach, vi } from 'vitest'
 
 // Mock environment variables for testing
@@ -7,7 +13,7 @@ const mockEnv = {
   NEXTAUTH_SECRET: 'test-secret-key-that-is-32-chars-long',
   NEXTAUTH_URL: 'http://localhost:3000',
   BUSINESS_NAME: 'Test HVAC Services',
-  BUSINESS_PHONE: '+1 (555) 123-4567',
+  BUSINESS_PHONE: '+15551234567',
   BUSINESS_EMAIL: 'test@example.com',
   BUSINESS_ADDRESS: '123 Test St, Test City, TS 12345',
   FEATURE_BLOG: 'true',

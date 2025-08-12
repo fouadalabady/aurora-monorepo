@@ -350,7 +350,7 @@ export interface SuccessMessages {
 
 // Configuration validation types
 export interface ConfigValidationResult {
-  valid: boolean
+  isValid: boolean
   errors: string[]
   warnings: string[]
 }
