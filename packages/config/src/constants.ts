@@ -146,11 +146,11 @@ export const LEAD_CONFIG = {
   },
   STATUSES: {
     NEW: { name: 'New', color: '#3B82F6', next: ['CONTACTED'] },
-    CONTACTED: { name: 'Contacted', color: '#8B5CF6', next: ['QUALIFIED', 'LOST'] },
-    QUALIFIED: { name: 'Qualified', color: '#F59E0B', next: ['QUOTED', 'LOST'] },
-    QUOTED: { name: 'Quoted', color: '#10B981', next: ['WON', 'LOST'] },
-    WON: { name: 'Won', color: '#059669', next: [] },
-    LOST: { name: 'Lost', color: '#DC2626', next: [] },
+    CONTACTED: { name: 'Contacted', color: '#F59E0B', next: ['QUALIFIED', 'LOST'] },
+    QUALIFIED: { name: 'Qualified', color: '#8B5CF6', next: ['QUOTED', 'LOST'] },
+    QUOTED: { name: 'Quoted', color: '#06B6D4', next: ['WON', 'LOST'] },
+    WON: { name: 'Won', color: '#10B981', next: [] },
+    LOST: { name: 'Lost', color: '#EF4444', next: [] },
   },
   URGENCY_LEVELS: {
     IMMEDIATE: { name: 'Immediate', hours: 2, surcharge: 200 },

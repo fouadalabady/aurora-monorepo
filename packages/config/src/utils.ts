@@ -25,8 +25,7 @@ import { env, getBaseUrl } from './env'
 
 // API URL utilities
 export function createApiUrl(endpoint: string, params?: Record<string, string | number>): string {
-  const baseUrl = getBaseUrl()
-  const url = new URL(`/api${endpoint}`, baseUrl)
+  const url = new URL(`/api${endpoint}`, 'http://localhost')
   
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
@@ -34,26 +33,38 @@ export function createApiUrl(endpoint: string, params?: Record<string, string | 
     })
   }
   
-  return url.toString()
+  return url.pathname + url.search
 }
 
 export function createImageUrl(path: string, size?: 'thumbnail' | 'medium' | 'large' | 'hero'): string {
-  const baseUrl = getBaseUrl()
-  
   if (size) {
     const sizeParam = `?size=${size}`
-    return `${baseUrl}/images${path}${sizeParam}`
+    return `/images/${path}${sizeParam}`
   }
   
-  return `${baseUrl}/images${path}`
+  return `/images/${path}`
 }
 
 // Service utilities
 export function formatServiceName(serviceId: string): string {
   return serviceId
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+    .toLowerCase()
+    // Replace slash with dash first, then handle other special chars
+    .replace(/\//g, '-')
+    // Replace ampersand and other special chars with space first
+    .replace(/[&]/g, ' ')
+    // Remove other special characters except alphanumeric, spaces, and dashes
+    .replace(/[^a-z0-9\s-]/g, '')
+    // Replace multiple spaces with single space
+    .replace(/\s+/g, ' ')
+    // Trim leading/trailing spaces
+    .trim()
+    // Replace spaces with dashes
+    .replace(/\s/g, '-')
+    // Replace multiple dashes with single dash
+    .replace(/-+/g, '-')
+    // Remove leading/trailing dashes
+    .replace(/^-+|-+$/g, '')
 }
 
 export function getServiceIcon(serviceId: string): string {
@@ -244,7 +255,19 @@ export function getServiceAreaDistance(city: string): number | null {
 export function formatPhoneNumber(phone: string): string {
   // Extract extension if present
   const extensionMatch = phone.match(/(ext|x)\s*(\d+)/i)
-  const extension = extensionMatch ? ` ${extensionMatch[1].toLowerCase()} ${extensionMatch[2]}` : ''
+  let extension = ''
+  
+  if (extensionMatch) {
+    const hasSpace = extensionMatch[0].includes(' ')
+    const extType = extensionMatch[1].toLowerCase()
+    const extNumber = extensionMatch[2]
+    
+    if (hasSpace) {
+      extension = ` ${extType} ${extNumber}`
+    } else {
+      extension = ` ${extType}${extNumber}`
+    }
+  }
   
   // Remove extension from phone number before cleaning
   const phoneWithoutExt = extensionMatch ? phone.replace(extensionMatch[0], '') : phone

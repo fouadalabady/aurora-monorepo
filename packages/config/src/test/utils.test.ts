@@ -35,9 +35,9 @@ describe('Configuration Utils Tests', () => {
       expect(url).toBe('/images/logo.png')
     })
     
-    it('should create image URL with custom path', () => {
-      const url = createImageUrl('hero.jpg', '/assets')
-      expect(url).toBe('/assets/hero.jpg')
+    it('should create image URL with size parameter', () => {
+      const url = createImageUrl('hero.jpg', 'large')
+      expect(url).toBe('/images/hero.jpg?size=large')
     })
   })
   

@@ -18,7 +18,8 @@
     "node_modules",
     "dist",
     "**/*.test.*",
-    "**/*.spec.*"
+    "**/*.spec.*",
+    "src/test/**/*"
   ],
   "references": [
     { "path": "../database" }

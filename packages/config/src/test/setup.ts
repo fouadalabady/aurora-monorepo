@@ -12,10 +12,7 @@ const mockEnv = {
   DATABASE_URL: 'postgresql://test:test@localhost:5432/test_db',
   NEXTAUTH_SECRET: 'test-secret-key-that-is-32-chars-long',
   NEXTAUTH_URL: 'http://localhost:3000',
-  BUSINESS_NAME: 'Test HVAC Services',
-  BUSINESS_PHONE: '+15551234567',
-  BUSINESS_EMAIL: 'test@example.com',
-  BUSINESS_ADDRESS: '123 Test St, Test City, TS 12345',
+  // Business config will use defaults from env.ts
   FEATURE_BLOG: 'true',
   FEATURE_TESTIMONIALS: 'true',
   FEATURE_PROJECTS: 'true',

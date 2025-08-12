@@ -27,48 +27,48 @@ describe('Environment Configuration Tests', () => {
       expect(isProduction()).toBe(false)
     })
     
-    it('should detect development environment', () => {
+    it('should detect development environment', async () => {
       process.env.NODE_ENV = 'development'
       
       // Re-import to get updated env
       vi.resetModules()
-      const { isDevelopment, isProduction, isTest } = require('../env')
+      const envModule = await import('../env')
       
-      expect(isDevelopment()).toBe(true)
-      expect(isProduction()).toBe(false)
-      expect(isTest()).toBe(false)
+      expect(envModule.isDevelopment()).toBe(true)
+      expect(envModule.isProduction()).toBe(false)
+      expect(envModule.isTest()).toBe(false)
     })
     
-    it('should detect production environment', () => {
+    it('should detect production environment', async () => {
       process.env.NODE_ENV = 'production'
       
       vi.resetModules()
-      const { isDevelopment, isProduction, isTest } = require('../env')
+      const envModule = await import('../env')
       
-      expect(isProduction()).toBe(true)
-      expect(isDevelopment()).toBe(false)
-      expect(isTest()).toBe(false)
+      expect(envModule.isProduction()).toBe(true)
+      expect(envModule.isDevelopment()).toBe(false)
+      expect(envModule.isTest()).toBe(false)
     })
   })
   
   describe('Base URL Configuration', () => {
-    it('should return NextAuth URL in production', () => {
+    it('should return NextAuth URL in production', async () => {
       process.env.NODE_ENV = 'production'
       process.env.NEXTAUTH_URL = 'https://example.com'
       
       vi.resetModules()
-      const { getBaseUrl } = require('../env')
+      const envModule = await import('../env')
       
-      expect(getBaseUrl()).toBe('https://example.com')
+      expect(envModule.getBaseUrl()).toBe('https://example.com')
     })
     
-    it('should return localhost in non-production', () => {
+    it('should return localhost in non-production', async () => {
       process.env.NODE_ENV = 'development'
       
       vi.resetModules()
-      const { getBaseUrl } = require('../env')
+      const envModule = await import('../env')
       
-      expect(getBaseUrl()).toBe('http://localhost:3000')
+      expect(envModule.getBaseUrl()).toBe('http://localhost:3000')
     })
   })
   
@@ -77,27 +77,27 @@ describe('Environment Configuration Tests', () => {
       expect(getDatabaseUrl()).toBe(process.env.DATABASE_URL)
     })
     
-    it('should return direct URL when available', () => {
+    it('should return direct URL when available', async () => {
       process.env.DIRECT_URL = 'postgresql://direct:url@localhost:5432/db'
       
       vi.resetModules()
-      const { getDirectUrl } = require('../env')
+      const envModule = await import('../env')
       
-      expect(getDirectUrl()).toBe('postgresql://direct:url@localhost:5432/db')
+      expect(envModule.getDirectUrl()).toBe('postgresql://direct:url@localhost:5432/db')
     })
     
-    it('should return undefined for direct URL when not set', () => {
+    it('should return undefined for direct URL when not set', async () => {
       delete process.env.DIRECT_URL
       
       vi.resetModules()
-      const { getDirectUrl } = require('../env')
+      const envModule = await import('../env')
       
-      expect(getDirectUrl()).toBeUndefined()
+      expect(envModule.getDirectUrl()).toBeUndefined()
     })
   })
   
   describe('SMTP Configuration', () => {
-    it('should return SMTP config when all required fields are present', () => {
+    it('should return SMTP config when all required fields are present', async () => {
       process.env.SMTP_HOST = 'smtp.example.com'
       process.env.SMTP_USER = 'user@example.com'
       process.env.SMTP_PASSWORD = 'password'
@@ -105,9 +105,9 @@ describe('Environment Configuration Tests', () => {
       process.env.SMTP_FROM = 'noreply@example.com'
       
       vi.resetModules()
-      const { getSmtpConfig } = require('../env')
+      const envModule = await import('../env')
       
-      const config = getSmtpConfig()
+      const config = envModule.getSmtpConfig()
       expect(config).toEqual({
         host: 'smtp.example.com',
         port: 587,
@@ -120,25 +120,25 @@ describe('Environment Configuration Tests', () => {
       })
     })
     
-    it('should return null when required fields are missing', () => {
+    it('should return null when required fields are missing', async () => {
       delete process.env.SMTP_HOST
       
       vi.resetModules()
-      const { getSmtpConfig } = require('../env')
+      const envModule = await import('../env')
       
-      expect(getSmtpConfig()).toBeNull()
+      expect(envModule.getSmtpConfig()).toBeNull()
     })
     
-    it('should use secure connection for port 465', () => {
+    it('should use secure connection for port 465', async () => {
       process.env.SMTP_HOST = 'smtp.example.com'
       process.env.SMTP_USER = 'user@example.com'
       process.env.SMTP_PASSWORD = 'password'
       process.env.SMTP_PORT = '465'
       
       vi.resetModules()
-      const { getSmtpConfig } = require('../env')
+      const envModule = await import('../env')
       
-      const config = getSmtpConfig()
+      const config = envModule.getSmtpConfig()
       expect(config?.secure).toBe(true)
     })
   })
@@ -158,16 +158,16 @@ describe('Environment Configuration Tests', () => {
       })
     })
     
-    it('should use custom Typesense config when provided', () => {
+    it('should use custom Typesense config when provided', async () => {
       process.env.TYPESENSE_HOST = 'search.example.com'
       process.env.TYPESENSE_PORT = '443'
       process.env.TYPESENSE_PROTOCOL = 'https'
       process.env.TYPESENSE_API_KEY = 'test-api-key'
       
       vi.resetModules()
-      const { getTypesenseConfig } = require('../env')
+      const envModule = await import('../env')
       
-      const config = getTypesenseConfig()
+      const config = envModule.getTypesenseConfig()
       expect(config.nodes[0]).toEqual({
         host: 'search.example.com',
         port: 443,
@@ -178,23 +178,23 @@ describe('Environment Configuration Tests', () => {
   })
   
   describe('MeiliSearch Configuration', () => {
-    it('should return null when MeiliSearch host is not configured', () => {
+    it('should return null when MeiliSearch host is not configured', async () => {
       delete process.env.MEILISEARCH_HOST
       
       vi.resetModules()
-      const { getMeiliSearchConfig } = require('../env')
+      const envModule = await import('../env')
       
-      expect(getMeiliSearchConfig()).toBeNull()
+      expect(envModule.getMeiliSearchConfig()).toBeNull()
     })
     
-    it('should return MeiliSearch config when host is provided', () => {
+    it('should return MeiliSearch config when host is provided', async () => {
       process.env.MEILISEARCH_HOST = 'https://search.example.com'
       process.env.MEILISEARCH_API_KEY = 'test-key'
       
       vi.resetModules()
-      const { getMeiliSearchConfig } = require('../env')
+      const envModule = await import('../env')
       
-      const config = getMeiliSearchConfig()
+      const config = envModule.getMeiliSearchConfig()
       expect(config).toEqual({
         host: 'https://search.example.com',
         apiKey: 'test-key',
@@ -203,36 +203,36 @@ describe('Environment Configuration Tests', () => {
   })
   
   describe('Plausible Configuration', () => {
-    it('should return null when domain is not configured', () => {
+    it('should return null when domain is not configured', async () => {
       delete process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN
       
       vi.resetModules()
-      const { getPlausibleConfig } = require('../env')
+      const envModule = await import('../env')
       
-      expect(getPlausibleConfig()).toBeNull()
+      expect(envModule.getPlausibleConfig()).toBeNull()
     })
     
-    it('should return Plausible config with default API host', () => {
+    it('should return Plausible config with default API host', async () => {
       process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN = 'example.com'
       
       vi.resetModules()
-      const { getPlausibleConfig } = require('../env')
+      const envModule = await import('../env')
       
-      const config = getPlausibleConfig()
+      const config = envModule.getPlausibleConfig()
       expect(config).toEqual({
         domain: 'example.com',
         apiHost: 'https://plausible.io',
       })
     })
     
-    it('should use custom API host when provided', () => {
+    it('should use custom API host when provided', async () => {
       process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN = 'example.com'
       process.env.NEXT_PUBLIC_PLAUSIBLE_API_HOST = 'https://analytics.example.com'
       
       vi.resetModules()
-      const { getPlausibleConfig } = require('../env')
+      const envModule = await import('../env')
       
-      const config = getPlausibleConfig()
+      const config = envModule.getPlausibleConfig()
       expect(config?.apiHost).toBe('https://analytics.example.com')
     })
   })
@@ -247,14 +247,14 @@ describe('Environment Configuration Tests', () => {
       })
     })
     
-    it('should parse custom upload configuration', () => {
+    it('should parse custom upload configuration', async () => {
       process.env.UPLOAD_MAX_SIZE = '5242880' // 5MB
       process.env.UPLOAD_ALLOWED_TYPES = 'image/jpeg,image/png'
       
       vi.resetModules()
-      const { getUploadConfig } = require('../env')
+      const envModule = await import('../env')
       
-      const config = getUploadConfig()
+      const config = envModule.getUploadConfig()
       expect(config).toEqual({
         maxSize: 5242880,
         allowedTypes: ['image/jpeg', 'image/png'],
@@ -278,10 +278,10 @@ describe('Environment Configuration Tests', () => {
       const config = getBusinessConfig()
       
       expect(config).toEqual({
-        name: 'Test HVAC Services',
-        phone: '+15551234567',
-        email: 'test@example.com',
-        address: '123 Test St, Test City, TS 12345',
+        name: 'Aurora HVAC Services',
+        phone: '+1 (555) 123-4567',
+        email: 'info@aurorahvac.com',
+        address: '123 Main St, City, State 12345',
       })
     })
   })
