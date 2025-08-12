@@ -6,6 +6,9 @@
   "types": "./src/index.ts",
   "scripts": {
     "build": "tsc",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "db:generate": "dotenv -e ../../.env -- prisma generate",
     "db:push": "dotenv -e ../../.env -- prisma db push",
     "db:migrate": "dotenv -e ../../.env -- prisma migrate dev",
@@ -20,6 +23,8 @@
     "prisma": "^5.7.1",
     "tsx": "^4.6.2",
     "@types/node": "^20.10.5",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "vitest": "^1.0.0"
   }
 }

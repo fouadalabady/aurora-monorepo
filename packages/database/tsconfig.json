@@ -14,13 +14,12 @@
     "moduleResolution": "node"
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "src/test/types.d.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "src/generated",
-    "**/*.test.*",
-    "**/*.spec.*"
+    "src/generated"
   ]
 }

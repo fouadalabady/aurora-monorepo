@@ -9,13 +9,11 @@ const __dirname = path.dirname(__filename);
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
 const nextConfig = {
-  experimental: {
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
       },
     },
   },

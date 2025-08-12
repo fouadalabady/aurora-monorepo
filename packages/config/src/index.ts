@@ -8,7 +8,8 @@ export {
   getDatabaseUrl,
   getDirectUrl,
   getSmtpConfig,
-  getMeiliSearchConfig,
+  getTypesenseConfig,
+  getMeiliSearchConfig, // Deprecated
   getPlausibleConfig,
   getUploadConfig,
   getRateLimitConfig,

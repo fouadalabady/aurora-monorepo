@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    // Enable App Router
-    appDir: true,
+  // Environment variables for middleware
+  env: {
+    AUTH_SECRET: process.env.AUTH_SECRET,
+    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   },
   // Transpile workspace packages
   transpilePackages: [

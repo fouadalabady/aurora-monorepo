@@ -1,15 +1,16 @@
 // Aurora Search Package
-// Built with MeiliSearch for fast, typo-tolerant search
+// Built with Typesense for fast, typo-tolerant search
 
 // Client and configuration
 export {
-  meiliClient,
-  INDEXES,
-  SEARCH_SETTINGS,
-  initializeIndexes,
+  typesenseClient,
+  COLLECTIONS,
+  COLLECTION_SCHEMAS,
+  initializeCollections,
   checkHealth,
-  getIndexStats,
-  clearAllIndexes,
+  getCollectionStats,
+  clearAllCollections,
+  recreateAllCollections,
 } from './client'
 
 // Search utilities and functions

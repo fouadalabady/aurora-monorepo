@@ -8,6 +8,9 @@
     "sourceMap": true,
     "composite": true,
     "incremental": true,
+    "noEmit": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
     "lib": ["ES2017", "ES2018", "ES2019", "DOM"]
   },
   "include": [

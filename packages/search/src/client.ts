@@ -1,13 +1,29 @@
-import { MeiliSearch } from 'meilisearch'
+import { Client } from 'typesense'
+import { getTypesenseConfig } from '@workspace/config'
 
-// Initialize MeiliSearch client
-export const meiliClient = new MeiliSearch({
-  host: process.env.MEILISEARCH_HOST || 'http://localhost:7700',
-  apiKey: process.env.MEILISEARCH_API_KEY,
-})
+// Define collection schema type based on Typesense documentation
+type CollectionSchema = {
+  name: string
+  fields: Array<{
+    name: string
+    type: 'string' | 'string[]' | 'int32' | 'int64' | 'float' | 'bool' | 'geopoint' | 'geopoint[]' | 'object' | 'object[]' | 'auto'
+    facet?: boolean
+    optional?: boolean
+    index?: boolean
+    sort?: boolean
+    infix?: boolean
+    locale?: string
+    stem?: boolean
+  }>
+  default_sorting_field?: string
+  enable_nested_fields?: boolean
+}
 
-// Index names
-export const INDEXES = {
+// Initialize Typesense client
+export const typesenseClient = new Client(getTypesenseConfig())
+
+// Collection names (equivalent to MeiliSearch indexes)
+export const COLLECTIONS = {
   SERVICES: 'services',
   POSTS: 'posts',
   PAGES: 'pages',
@@ -15,167 +31,115 @@ export const INDEXES = {
   TESTIMONIALS: 'testimonials',
 } as const
 
-// Search settings for each index
-export const SEARCH_SETTINGS = {
-  [INDEXES.SERVICES]: {
-    searchableAttributes: [
-      'title',
-      'description',
-      'content',
-      'category',
-      'tags',
+// Collection schemas for Typesense
+export const COLLECTION_SCHEMAS: Record<string, CollectionSchema> = {
+  [COLLECTIONS.SERVICES]: {
+    name: COLLECTIONS.SERVICES,
+    fields: [
+      { name: 'id', type: 'string' as const },
+      { name: 'title', type: 'string' as const },
+      { name: 'description', type: 'string' as const },
+      { name: 'content', type: 'string' as const },
+      { name: 'category', type: 'string' as const, facet: true },
+      { name: 'tags', type: 'string[]' as const, facet: true },
+      { name: 'status', type: 'string' as const, facet: true },
+      { name: 'featured', type: 'bool' as const, facet: true },
+      { name: 'priceType', type: 'string' as const, facet: true },
+      { name: 'price', type: 'float' as const, optional: true },
+      { name: 'createdAt', type: 'int64' as const },
+      { name: 'updatedAt', type: 'int64' as const },
     ],
-    filterableAttributes: [
-      'category',
-      'status',
-      'featured',
-      'priceType',
-      'createdAt',
-      'updatedAt',
-    ],
-    sortableAttributes: [
-      'title',
-      'price',
-      'createdAt',
-      'updatedAt',
-    ],
-    rankingRules: [
-      'words',
-      'typo',
-      'proximity',
-      'attribute',
-      'sort',
-      'exactness',
-    ],
-    stopWords: ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'],
-    synonyms: {
-      'hvac': ['heating', 'cooling', 'air conditioning', 'ventilation'],
-      'ac': ['air conditioning', 'air conditioner'],
-      'repair': ['fix', 'service', 'maintenance'],
-      'install': ['installation', 'setup'],
-    },
+    default_sorting_field: 'createdAt',
   },
-  [INDEXES.POSTS]: {
-    searchableAttributes: [
-      'title',
-      'excerpt',
-      'content',
-      'tags',
-      'category',
+  [COLLECTIONS.POSTS]: {
+    name: COLLECTIONS.POSTS,
+    fields: [
+      { name: 'id', type: 'string' as const },
+      { name: 'title', type: 'string' as const },
+      { name: 'excerpt', type: 'string' as const },
+      { name: 'content', type: 'string' as const },
+      { name: 'tags', type: 'string[]' as const, facet: true },
+      { name: 'category', type: 'string' as const, facet: true },
+      { name: 'status', type: 'string' as const, facet: true },
+      { name: 'featured', type: 'bool' as const, facet: true },
+      { name: 'authorId', type: 'string' as const, facet: true },
+      { name: 'publishedAt', type: 'int64' as const, optional: true },
+      { name: 'createdAt', type: 'int64' as const },
+      { name: 'updatedAt', type: 'int64' as const },
     ],
-    filterableAttributes: [
-      'status',
-      'featured',
-      'category',
-      'authorId',
-      'publishedAt',
-      'createdAt',
-      'updatedAt',
-    ],
-    sortableAttributes: [
-      'title',
-      'publishedAt',
-      'createdAt',
-      'updatedAt',
-    ],
-    rankingRules: [
-      'words',
-      'typo',
-      'proximity',
-      'attribute',
-      'sort',
-      'exactness',
-    ],
+    default_sorting_field: 'publishedAt',
   },
-  [INDEXES.PAGES]: {
-    searchableAttributes: [
-      'title',
-      'content',
-      'metaDescription',
+  [COLLECTIONS.PAGES]: {
+    name: COLLECTIONS.PAGES,
+    fields: [
+      { name: 'id', type: 'string' as const },
+      { name: 'title', type: 'string' as const },
+      { name: 'content', type: 'string' as const },
+      { name: 'metaDescription', type: 'string' as const },
+      { name: 'status', type: 'string' as const, facet: true },
+      { name: 'template', type: 'string' as const, facet: true },
+      { name: 'createdAt', type: 'int64' as const },
+      { name: 'updatedAt', type: 'int64' as const },
     ],
-    filterableAttributes: [
-      'status',
-      'template',
-      'createdAt',
-      'updatedAt',
-    ],
-    sortableAttributes: [
-      'title',
-      'createdAt',
-      'updatedAt',
-    ],
+    default_sorting_field: 'createdAt',
   },
-  [INDEXES.PROJECTS]: {
-    searchableAttributes: [
-      'title',
-      'description',
-      'content',
-      'category',
-      'tags',
-      'location',
+  [COLLECTIONS.PROJECTS]: {
+    name: COLLECTIONS.PROJECTS,
+    fields: [
+      { name: 'id', type: 'string' as const },
+      { name: 'title', type: 'string' as const },
+      { name: 'description', type: 'string' as const },
+      { name: 'content', type: 'string' as const },
+      { name: 'category', type: 'string' as const, facet: true },
+      { name: 'tags', type: 'string[]' as const, facet: true },
+      { name: 'location', type: 'string' as const },
+      { name: 'status', type: 'string' as const, facet: true },
+      { name: 'featured', type: 'bool' as const, facet: true },
+      { name: 'completedAt', type: 'int64' as const, optional: true },
+      { name: 'createdAt', type: 'int64' as const },
+      { name: 'updatedAt', type: 'int64' as const },
     ],
-    filterableAttributes: [
-      'status',
-      'featured',
-      'category',
-      'completedAt',
-      'createdAt',
-      'updatedAt',
-    ],
-    sortableAttributes: [
-      'title',
-      'completedAt',
-      'createdAt',
-      'updatedAt',
-    ],
+    default_sorting_field: 'completedAt',
   },
-  [INDEXES.TESTIMONIALS]: {
-    searchableAttributes: [
-      'content',
-      'clientName',
-      'clientCompany',
-      'projectType',
+  [COLLECTIONS.TESTIMONIALS]: {
+    name: COLLECTIONS.TESTIMONIALS,
+    fields: [
+      { name: 'id', type: 'string' as const },
+      { name: 'content', type: 'string' as const },
+      { name: 'clientName', type: 'string' as const },
+      { name: 'clientCompany', type: 'string' as const },
+      { name: 'projectType', type: 'string' as const, facet: true },
+      { name: 'status', type: 'string' as const, facet: true },
+      { name: 'featured', type: 'bool' as const, facet: true },
+      { name: 'rating', type: 'int32' as const, facet: true },
+      { name: 'createdAt', type: 'int64' as const },
+      { name: 'updatedAt', type: 'int64' as const },
     ],
-    filterableAttributes: [
-      'status',
-      'featured',
-      'rating',
-      'projectType',
-      'createdAt',
-      'updatedAt',
-    ],
-    sortableAttributes: [
-      'rating',
-      'createdAt',
-      'updatedAt',
-    ],
+    default_sorting_field: 'createdAt',
   },
 }
 
-// Initialize indexes with settings
-export async function initializeIndexes() {
+// Initialize collections with schemas
+export async function initializeCollections() {
   try {
-    console.log('Initializing MeiliSearch indexes...')
+    console.log('Initializing Typesense collections...')
     
-    for (const [indexName, settings] of Object.entries(SEARCH_SETTINGS)) {
-      const index = meiliClient.index(indexName)
-      
-      // Create index if it doesn't exist
+    for (const [collectionName, schema] of Object.entries(COLLECTION_SCHEMAS)) {
       try {
-        await index.getStats()
+        // Check if collection exists
+        await typesenseClient.collections(collectionName).retrieve()
+        console.log(`Collection ${collectionName} already exists`)
       } catch (error) {
-        console.log(`Creating index: ${indexName}`)
-        await meiliClient.createIndex(indexName)
+        // Collection doesn't exist, create it
+        console.log(`Creating collection: ${collectionName}`)
+        await typesenseClient.collections().create(schema)
+        console.log(`Collection ${collectionName} created successfully`)
       }
-      
-      // Update settings
-      console.log(`Updating settings for index: ${indexName}`)
-      await index.updateSettings(settings)
     }
     
-    console.log('MeiliSearch indexes initialized successfully')
+    console.log('Typesense collections initialized successfully')
   } catch (error) {
-    console.error('Failed to initialize MeiliSearch indexes:', error)
+    console.error('Failed to initialize Typesense collections:', error)
     throw error
   }
 }
@@ -183,39 +147,74 @@ export async function initializeIndexes() {
 // Health check
 export async function checkHealth() {
   try {
-    const health = await meiliClient.health()
-    return health.status === 'available'
+    const health = await typesenseClient.health.retrieve()
+    return health.ok === true
   } catch (error) {
-    console.error('MeiliSearch health check failed:', error)
+    console.error('Typesense health check failed:', error)
     return false
   }
 }
 
-// Get index stats
-export async function getIndexStats(indexName: string) {
+// Get collection stats
+export async function getCollectionStats(collectionName: string) {
   try {
-    const index = meiliClient.index(indexName)
-    return await index.getStats()
+    const collection = await typesenseClient.collections(collectionName).retrieve()
+    return {
+      name: collection.name,
+      num_documents: collection.num_documents,
+      created_at: collection.created_at,
+    }
   } catch (error) {
-    console.error(`Failed to get stats for index ${indexName}:`, error)
+    console.error(`Failed to get stats for collection ${collectionName}:`, error)
     return null
   }
 }
 
-// Clear all indexes (useful for development)
-export async function clearAllIndexes() {
+// Clear all collections (useful for development)
+export async function clearAllCollections() {
   try {
-    console.log('Clearing all MeiliSearch indexes...')
+    console.log('Clearing all Typesense collections...')
     
-    for (const indexName of Object.values(INDEXES)) {
-      const index = meiliClient.index(indexName)
-      await index.deleteAllDocuments()
-      console.log(`Cleared index: ${indexName}`)
+    for (const collectionName of Object.values(COLLECTIONS)) {
+      try {
+        await typesenseClient.collections(collectionName).documents().delete({
+          filter_by: 'id:!=null'
+        })
+        console.log(`Cleared collection: ${collectionName}`)
+      } catch (error) {
+        console.error(`Failed to clear collection ${collectionName}:`, error)
+      }
     }
     
-    console.log('All indexes cleared successfully')
+    console.log('All collections cleared successfully')
   } catch (error) {
-    console.error('Failed to clear indexes:', error)
+    console.error('Failed to clear collections:', error)
+    throw error
+  }
+}
+
+// Drop and recreate all collections (useful for schema changes)
+export async function recreateAllCollections() {
+  try {
+    console.log('Recreating all Typesense collections...')
+    
+    // Delete existing collections
+    for (const collectionName of Object.values(COLLECTIONS)) {
+      try {
+        await typesenseClient.collections(collectionName).delete()
+        console.log(`Deleted collection: ${collectionName}`)
+      } catch (error) {
+        // Collection might not exist, continue
+        console.log(`Collection ${collectionName} doesn't exist or already deleted`)
+      }
+    }
+    
+    // Recreate collections
+    await initializeCollections()
+    
+    console.log('All collections recreated successfully')
+  } catch (error) {
+    console.error('Failed to recreate collections:', error)
     throw error
   }
 }

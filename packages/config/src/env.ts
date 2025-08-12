@@ -24,6 +24,13 @@ const envSchema = z.object({
   SMTP_PASSWORD: z.string().optional(),
   SMTP_FROM: z.string().email('Invalid SMTP from email').optional(),
   
+  // Typesense
+  TYPESENSE_HOST: z.string().optional(),
+  TYPESENSE_PORT: z.string().optional().default('8108'),
+  TYPESENSE_PROTOCOL: z.string().optional().default('http'),
+  TYPESENSE_API_KEY: z.string().optional(),
+  TYPESENSE_ADMIN_API_KEY: z.string().optional(),
+  
   // MeiliSearch
   MEILISEARCH_HOST: z.string().url('Invalid MeiliSearch host').optional(),
   MEILISEARCH_API_KEY: z.string().optional(),
@@ -139,6 +146,19 @@ export function getSmtpConfig() {
   }
 }
 
+export function getTypesenseConfig() {
+  return {
+    nodes: [{
+      host: env.TYPESENSE_HOST || 'localhost',
+      port: parseInt(env.TYPESENSE_PORT || '8108'),
+      protocol: (env.TYPESENSE_PROTOCOL || 'http') as 'http' | 'https',
+    }],
+    apiKey: env.TYPESENSE_API_KEY || '',
+    connectionTimeoutSeconds: 5,
+  }
+}
+
+// Deprecated: Use getTypesenseConfig() instead
 export function getMeiliSearchConfig() {
   if (!env.MEILISEARCH_HOST) {
     return null
@@ -222,7 +242,19 @@ export function validateEmailConfig(): void {
 }
 
 export function validateSearchConfig(): void {
-  validateRequiredEnvVars(['MEILISEARCH_HOST'])
+  if (!env.TYPESENSE_HOST) {
+    throw new Error('TYPESENSE_HOST is required for search functionality')
+  }
+  if (!env.TYPESENSE_API_KEY) {
+    throw new Error('TYPESENSE_API_KEY is required for search functionality')
+  }
+}
+
+// Deprecated: Use validateSearchConfig() for Typesense instead
+export function validateMeiliSearchConfig(): void {
+  if (env.MEILISEARCH_HOST) {
+    validateRequiredEnvVars(['MEILISEARCH_HOST'])
+  }
 }
 
 export function validateAnalyticsConfig(): void {

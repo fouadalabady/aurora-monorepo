@@ -1,15 +1,22 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src",
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "ES2017"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": false,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "composite": true,
-    "incremental": true,
-    "jsx": "react-jsx",
-    "lib": ["dom", "dom.iterable", "es6"]
+    "outDir": "dist",
+    "rootDir": "src"
   },
   "include": [
     "src/**/*"

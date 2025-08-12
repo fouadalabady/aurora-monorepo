@@ -9,7 +9,10 @@
     "dev": "tsc --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "plausible-tracker": "^0.3.8",
@@ -18,8 +21,10 @@
   "devDependencies": {
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.45",
+    "@vitest/coverage-v8": "^1.1.0",
     "eslint": "^8.56.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
   },
   "peerDependencies": {
     "next": "^14.0.0",

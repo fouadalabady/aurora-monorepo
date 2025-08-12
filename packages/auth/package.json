@@ -9,14 +9,17 @@
     "dev": "tsc --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "next-auth": "^4.24.5",
-    "@auth/prisma-adapter": "^1.4.0",
+    "@auth/prisma-adapter": "^2.10.0",
     "@workspace/database": "workspace:*",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
+    "next-auth": "5.0.0-beta.29",
     "nodemailer": "^6.9.8",
     "zod": "^3.22.4"
   },
@@ -25,8 +28,10 @@
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^20.10.6",
     "@types/nodemailer": "^6.4.14",
+    "@vitest/coverage-v8": "^1.1.0",
     "eslint": "^8.56.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
   },
   "peerDependencies": {
     "next": "^14.0.0",
